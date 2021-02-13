@@ -1,12 +1,12 @@
 import random
 
-from riffpe import Riffpe
+from riffpe.riffpe import Riffpe
 
 
 def test_rs():
-    c = random.randint(10, 100)
+    c = random.randint(10, 10000)
     l = random.randint(3, 10)
-    print("Generated parameters: %s %s" % (c + 1, l))
+    print("Generated parameters: %s %s" % (c, l))
 
     w = Riffpe(c, l)
 
@@ -25,13 +25,13 @@ def test_rs():
 
 
 def random_message(c:int, l:int):
-    return [random.randint(0, c) for iter in range(l)]
+    return [random.randint(0, c-1) for iter in range(l)]
 
 
 def test_enc():
     c = random.randint(10, 100)
     l = random.randint(3, 10)
-    print("Generated parameters: %s %s" % (c + 1, l))
+    print("Generated parameters: %s %s" % (c, l))
 
     w = Riffpe(c, l)
 
