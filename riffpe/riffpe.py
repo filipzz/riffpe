@@ -6,22 +6,22 @@ class Riffpe:
         self.c = c
         self.l = l
 
-    def rs(self, key: str, tag: str, x_prev, x: int, x_next, inv: int):
+    def rs(self, key: str, tag: str, x_left, x: int, x_right, inv: int):
         '''
         This is the mock up of riffle shuffle
         (it is not RS at all but this gives "permutation functionality")
 
-        :param str key - the key
-        :param str tag - tag
-        :param x_prev - a list of integers representing "left dependents"
+        :param key - the key
+        :param tag - tag
+        :param x_left - a list of integers representing "left dependents"
         :param x - an integer to be "encrypted"
-        :param x_next - a list of integers representing "right dependents"
+        :param x_right - a list of integers representing "right dependents"
         :param inv - either 0 or 1 representing if we calculate RS or its inverse
         '''
         sep_prev = "<"
         sep_next = ">"
-        derived_seed = "k:" + key + "-t:" + tag + "-l:" + sep_prev.join(map(str, x_prev)) + "-r:" + sep_next.join(
-            map(str, x_next))
+        derived_seed = "k:" + key + "-t:" + tag + "-l:" + sep_prev.join(map(str, x_left)) + "-r:" + sep_next.join(
+            map(str, x_right))
         derived_key = hashlib.pbkdf2_hmac('sha256', b'abcdef', derived_seed.encode(), 100)
         derived_key_int = int(derived_key.hex(), 16)
         # print("%s %s %s %s" % (k, t, x, key_int))
@@ -29,46 +29,43 @@ class Riffpe:
 
     def phase_enc(self, key, tag, m):
 
-        prev = []
+        x_left = []
 
         for i in range(self.l):
             x = m[i]
-            next = m[i + 1:]
-            y = self.rs(key, tag, prev, x, next, 0)
-            prev.append(y)
+            x_right = m[i + 1:]
+            y = self.rs(key, tag, x_left, x, x_right, 0)
+            x_left.append(y)
 
-        return prev
+        return x_left
 
-    def enc(self, key: str, tag: str, X):
+    def enc(self, key: str, tag: str, x):
 
         # absrobing phase
-        Y = self.phase_enc(key, tag, X)
-
+        y = self.phase_enc(key, tag, x)
         # squeeze phase
-        Z = self.phase_enc(key, tag, Y)
+        z = self.phase_enc(key, tag, y)
 
         # print("%s\n%s\n%s" % (X, Y, Z))
-        return Z
+        return z
 
     def phase_dec(self, key, tag, m):
 
-        prev = m[:-1]
-        y = m[self.l - 1]
-        next = []
+        x_right = []
 
         for i in range(self.l):
             y = m[self.l - 1 - i]
-            prev = m[:-1 - i]
-            z = self.rs(key, tag, prev, y, next, 1)
-            next = [z] + next
+            x_left = m[:-1 - i]
+            z = self.rs(key, tag, x_left, y, x_right, 1)
+            x_right = [z] + x_right
 
-        return next
+        return x_right
 
-    def dec(self, key, tag, Z):
+    def dec(self, key, tag, z):
 
-        Y = self.phase_dec(key, tag, Z)
+        y = self.phase_dec(key, tag, z)
 
-        X = self.phase_dec(key, tag, Y)
+        x = self.phase_dec(key, tag, y)
 
         # print("%s\n%s\n%s" % (Z, Y, X))
-        return X
+        return x
