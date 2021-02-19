@@ -6,6 +6,7 @@ from riffpe.riffpe import Riffpe
 def test_rs():
     c = random.randint(10, 10000)
     l = random.randint(3, 10)
+    f = random.randint(0, 1)
     print("Generated parameters: %s %s" % (c, l))
 
     w = Riffpe(c, l)
@@ -18,8 +19,8 @@ def test_rs():
         x = message[i]
         next = message[i + 1:]
         # print("%s %s %s" % (prev, x, next))
-        enc = w.rs("asdasd", "asdasd", prev, x, next, 0)
-        dec = w.rs("asdasd", "asdasd", prev, enc, next, 1)
+        enc = w.rs("asdasd", "asdasd", prev, x, next, f, 0)
+        dec = w.rs("asdasd", "asdasd", prev, enc, next, f, 1)
         print("%s %s %s" % (x, enc, dec))
         assert (x == dec)
 
