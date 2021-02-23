@@ -3,6 +3,7 @@ from Crypto.Util.Padding import pad
 
 
 class Perm:
+
     def __init__(self, c: int, key: bytearray):
         self.c = c
         self.key = key
@@ -21,9 +22,16 @@ class Perm:
 
         permutation = {}
 
-        for i in range(self.c):
+        for i in range(self.c // 2):
             encrypted = cipher.encrypt(pad(str(i).encode(), AES.block_size))
-            permutation[encrypted.hex()] = i
+            #print(str(encrypted.hex()[0:8]))
+            permutation[encrypted.hex()[0:8]] = 4 * i
+            #print(str(encrypted.hex()[8:16]))
+            permutation[encrypted.hex()[8:16]] = 4 * i + 1
+            #print(str(encrypted.hex()[16:24]))
+            permutation[encrypted.hex()[16:24]] = 4 * i + 2
+            #print(str(encrypted.hex()[24:32]))
+            permutation[encrypted.hex()[24:32]] = 4 * i + 3
 
         position = 0
         for m in sorted(permutation.keys()):

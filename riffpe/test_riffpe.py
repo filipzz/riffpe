@@ -1,31 +1,16 @@
+from Crypto.Random import get_random_bytes
 import random
 
 from riffpe.riffpe import Riffpe
 
 
-def test_rs():
-    c = random.randint(10, 10000)
-    l = random.randint(3, 10)
-    f = random.randint(0, 1)
-    print("Generated parameters: %s %s" % (c, l))
-
-    w = Riffpe(c, l)
-
-    message = random_message(c, l)
-    print("Testing for message: " + str(message))
-
-    for i in range(l):
-        prev = message[0:i]
-        x = message[i]
-        next = message[i + 1:]
-        # print("%s %s %s" % (prev, x, next))
-        enc = w.rs("asdasd", "asdasd", prev, x, next, f, 0)
-        dec = w.rs("asdasd", "asdasd", prev, enc, next, f, 1)
-        print("%s %s %s" % (x, enc, dec))
-        assert (x == dec)
-
-
 def random_message(c:int, l:int):
+    """
+    Generates a random message from **Z_c^l**
+    :param c:
+    :param l:
+    :return:
+    """
     return [random.randint(0, c-1) for iter in range(l)]
 
 
@@ -34,14 +19,15 @@ def test_enc():
     l = random.randint(3, 10)
     print("Generated parameters: %s %s" % (c, l))
 
-    w = Riffpe(c, l)
+    key = get_random_bytes(16)
+    w = Riffpe(c, l, key)
 
     message = random_message(c, l)
     print("Message:\t" + str(message))
 
-    enc = w.enc("asdasd", "asdasda", message)
+    enc = w.enc("asdasda", message)
 
-    dec = w.dec("asdasd", "asdasda", enc)
+    dec = w.dec("asdasda", enc)
 
     print("Decrypted:\t" + str(dec))
 
