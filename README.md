@@ -5,13 +5,13 @@
 Encrypt message
 
 ```python
-python -m riffpe -p 11 10 12 3
+python -m riffpe -e 11 10 12 3
 ```
 
 Decrypt
 
 ```python
-python -m riffpe -c 26 30 13 67
+python -m riffpe -d 26 30 13 67
 ```
 
 ## Testing
