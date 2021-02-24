@@ -5,11 +5,12 @@ from riffpe.perm import Perm
 
 
 class Riffpe:
-    def __init__(self, c, l, key):
+    def __init__(self, c, l, key, chop = 1):
         self.c = c
         self.l = l
         self.key = key
-        print("here we go %s %s" % (c, l))
+        self.chop = chop
+        print("here we go %s %s %s" % (c, l, chop))
 
     def perm(self, x: int, key: bytearray(16), inv: int):
         """
@@ -19,7 +20,7 @@ class Riffpe:
         :param inv: if equal to 0 then the permutation is evaluated if 1 then its inverse
         :return:
         """
-        pi = Perm(self.c, key)
+        pi = Perm(self.c, key, self.chop)
         return pi.perm(bytearray(16), x, inv)
 
     def prf(self, x):
@@ -114,7 +115,9 @@ class Riffpe:
         """
         sep_prev = "<"
         sep_next = ">"
-        r = sep_prev.join(map(str, x_left)) + "-" + sep_next.join(map(str, x_right)) + "-" + str(f) + "-" + tag
+        r = sep_prev.join(map(str, x_left)) + \
+            "-" + sep_next.join(map(str, x_right)) + \
+            "-" + str(f) + "-" + tag
         k_i = self.prf(r)
         return k_i
 

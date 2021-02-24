@@ -4,40 +4,49 @@ from Crypto.Util.Padding import pad
 
 class Perm:
 
-    def __init__(self, c: int, key: bytearray):
+    def __init__(self, c: int, key: bytearray, chop = 1):
         self.c = c
         self.key = key
+        self.chop = chop
 
     def perm(self, iv: bytearray, x: int, inv: int):
         """
-        For a given key and iv, generates c elements that are encrypted and then sorted.
-        In this way a permutation of c elements is otained
+        For a given key and iv, generates self.c elements that are encrypted and then sorted.
+        In this way a permutation of c elements is obtained (this is in fact Riffle Shuffle).
         :param iv: 
         :param x: 
         :param inv: 
         :return: 
         """
 
-        cipher = AES.new(self.key, AES.MODE_CBC, iv) 
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
 
         permutation = {}
+        permutation_inv = {}
 
-        for i in range(self.c // 2):
+        i = 0
+        generated_parts = 0
+        # this loop implements Riffle Shuffle:
+        # each "card" is assigned pseudo-randomly generated bits
+        # then a permutation is obtained by sorting the cards
+        while generated_parts < self.c:
             encrypted = cipher.encrypt(pad(str(i).encode(), AES.block_size))
-            #print(str(encrypted.hex()[0:8]))
-            permutation[encrypted.hex()[0:8]] = 4 * i
-            #print(str(encrypted.hex()[8:16]))
-            permutation[encrypted.hex()[8:16]] = 4 * i + 1
-            #print(str(encrypted.hex()[16:24]))
-            permutation[encrypted.hex()[16:24]] = 4 * i + 2
-            #print(str(encrypted.hex()[24:32]))
-            permutation[encrypted.hex()[24:32]] = 4 * i + 3
+            part = 0
+            while part < self.chop and generated_parts < self.c:
+                from_i = part * (32 // self.chop)
+                to_i = (part + 1) * (32 // self.chop)
+                k_id = encrypted.hex()[from_i:to_i]
+                permutation[k_id] = generated_parts
+                permutation_inv[str(generated_parts)] = k_id
+                generated_parts = generated_parts + 1
+                part = part + 1
+            i = i + 1
 
-        position = 0
-        for m in sorted(permutation.keys()):
-            if inv == 0 and permutation[m] == x:
-                return position
-            if inv == 1 and position == x:
-                return permutation[m]
-            position = position + 1
+        w = sorted(permutation.keys())
 
+        if inv == 0:
+            id = permutation_inv[str(x)]
+            return w.index(id)
+        else:
+            id = w[x]
+            return permutation[id]
