@@ -7,7 +7,10 @@ from urllib import parse
 import json
 import requests
 from pathlib import Path
-
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from ff3 import FF3Cipher
+import pyffx
 
 def random_message(c:int, l:int):
     """
@@ -56,16 +59,18 @@ if __name__ == '__main__':
     parser.add_argument("--test", help="Performs efficiency test", type=int)
     parser.add_argument("--chops", help="lenght of the random walk is 32//chops", type=int)
     parser.add_argument("--read", help="Reads test data from a file", type=str)
+    parser.add_argument("--compare", help="Reads test data from a file", type=str)
     parser.add_argument("--generate", help="Generates test data and saves them in a file", type=int)
 
     args, args_unknown = parser.parse_known_args()
 
-    n = 10000
+    n = 100
     l = 0
     chops = 1
 
     key = b'\xefTT\xc89\xd0ap\xd7M\x97V\xd3\x82h\xeb'
-    tag = "email@example.com"
+    tag = "email@am"
+
 
     plaintext = ""
     ciphertext = ""
@@ -87,21 +92,21 @@ if __name__ == '__main__':
         plaintext = args.encrypt
         l = len(plaintext)
         #mode = "encrypt"
-        c = Riffpe(n, l, key, chops)
-        enc = c.enc(tag, plaintext)
+        c = Riffpe(n, l, key, tag, chops)
+        enc = c.enc(plaintext)
         print(str(enc))
     elif args.decrypt:
         ciphertext = args.decrypt
         #mode = "decrypt"
         l = len(ciphertext)
-        c = Riffpe(n, l, key, chops)
-        dec = c.dec(tag, ciphertext)
+        c = Riffpe(n, l, key, tag, chops)
+        dec = c.dec(ciphertext)
         print(str(dec))
     elif args.test:
         tests = args.test
         l = 16
         n = 10
-        c = Riffpe(n, l, key, chops)
+        c = Riffpe(n, l, key, tag, chops)
         w = {}
 
         for m in range(tests):
@@ -115,8 +120,10 @@ if __name__ == '__main__':
     elif args.generate:
         tests = args.generate
         fl = {}
-        n = 100
-        l = 3
+        n = 10000
+        l = 1
+        #n = 10
+        #l = 4
         for m in range(tests):
             x = [random.randint(0, n - 1) for iter in range(l)]
             fl[m] = x
@@ -124,13 +131,36 @@ if __name__ == '__main__':
 
     elif args.read:
         fl = read("data.json")
-        n = 100
-        l = 3
-        c = Riffpe(n, l, key, chops)
+        n = 10
+        l = 4
+        c = Riffpe(n, l, key, tag, chops)
         w = {}
         for m in fl:
             x = fl[m]
             #print(str(x))
-            ency = c.enc("tag", x)
+            ency = c.enc(x)
             w[m] = ency
 
+    elif args.compare:
+        fl = read("data.json")
+        key = "EF4359D8D580AA4F7F036D6F04FC6A94"
+        tweak = "D8E7920AFA330A73"
+
+        #n = 100
+        #l = 3
+        #c = Riffpe(n, l, key, chops)
+        w = {}
+        for m in fl:
+            x = fl[m]
+            pt = x[0]
+            #c = FF3Cipher(10, key, tweak)
+            c = pyffx.Integer(key.encode(), length=4)
+            #cipher = AES.new(key, AES.MODE_CBC, bytearray(AES.block_size))
+            #print(str(pt))
+            encrypted = c.encrypt(str(pt))
+            w[m] = encrypted
+
+            #print(str(x))
+            #ency = c.enc("tag", x)
+
+            #w[m] = ct

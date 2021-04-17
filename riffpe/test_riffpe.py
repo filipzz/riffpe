@@ -20,14 +20,16 @@ def test_enc():
     print("Generated parameters: %s %s" % (c, l))
 
     key = get_random_bytes(16)
-    w = Riffpe(c, l, key)
+    #key = b'\xefTT\xc89\xd0ap\xd7M\x97V\xd3\x82h\xeb'
+    tweak = "momo"
+    w = Riffpe(c, l, key, tweak, 1)
 
     message = random_message(c, l)
     print("Message:\t" + str(message))
 
-    enc = w.enc("asdasda", message)
+    enc = w.enc(message)
 
-    dec = w.dec("asdasda", enc)
+    dec = w.dec(enc)
 
     print("Decrypted:\t" + str(dec))
 

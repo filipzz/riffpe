@@ -12,6 +12,7 @@ def test_perm():
     c = random.randint(10, 10000)
 
     key = get_random_bytes(16)
+    #key = b'\xefTT\xc89\xd0ap\xd7M\x97V\xd3\x82h\xeb'
 
 
 

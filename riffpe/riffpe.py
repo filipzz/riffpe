@@ -5,12 +5,13 @@ from riffpe.perm import Perm
 
 
 class Riffpe:
-    def __init__(self, c, l, key, chop = 1):
+    def __init__(self, c, l, key, tweak, chop = 1):
         self.c = c
         self.l = l
         self.key = key
+        self.tweak = tweak
         self.chop = chop
-        print("here we go %s %s %s" % (c, l, chop))
+        #print("here we go %s %s %s" % (c, l, tweak, chop))
 
     def perm(self, x: int, key: bytearray(16), inv: int):
         """
@@ -21,7 +22,7 @@ class Riffpe:
         :return:
         """
         pi = Perm(self.c, key, self.chop)
-        return pi.perm(bytearray(16), x, inv)
+        return pi.perm(pad((str(self.c) + "_" + str(self.l) + "^" + self.tweak).encode(), AES.block_size), x, inv)
 
     def prf(self, x):
         """
@@ -33,7 +34,7 @@ class Riffpe:
         encrypted = cipher.encrypt(pad(str(x).encode(), AES.block_size))
         return encrypted[-AES.block_size:]
 
-    def round(self, tag, f, m):
+    def round(self, f, m):
         """
         Computes a single round of Riffpe
         :param tag:
@@ -47,13 +48,13 @@ class Riffpe:
         for i in range(self.l):
             x = m[i]
             x_right = m[i + 1:]
-            k_i = self.key_derivation(x_left, x_right, f, tag)
+            k_i = self.key_derivation(x_left, x_right, f)
             y = self.perm(x, k_i, 0)
             x_left.append(y)
 
         return x_left
 
-    def enc(self, tag, x):
+    def enc(self, x):
         """
         Encrypts x for given tag by calling twice the round function
         :param tag:
@@ -62,13 +63,13 @@ class Riffpe:
         """
 
         # absrobing phase
-        y = self.round(tag, 0, x)
+        y = self.round(0, x)
         # squeeze phase
-        z = self.round(tag, 1, y)
+        z = self.round(1, y)
 
         return z
 
-    def round_inv(self, tag, f, m):
+    def round_inv(self, f, m):
         """
         Computes the inverse of the round function
         :param tag:
@@ -82,13 +83,13 @@ class Riffpe:
         for i in range(self.l):
             y = m[self.l - 1 - i]
             x_left = m[:-1 - i]
-            k_i = self.key_derivation(x_left, x_right, f, tag)
+            k_i = self.key_derivation(x_left, x_right, f)
             z = self.perm(y, k_i, 1)
             x_right = [z] + x_right
 
         return x_right
 
-    def dec(self, tag, z):
+    def dec(self, z):
         """
         Decrypts z for given tag
         :param tag:
@@ -97,14 +98,14 @@ class Riffpe:
         """
 
         # inverting squeezing phase
-        y = self.round_inv(tag, 1, z)
+        y = self.round_inv(1, z)
 
         # inverting absorbing phase
-        x = self.round_inv(tag, 0, y)
+        x = self.round_inv(0, y)
 
         return x
 
-    def key_derivation(self, x_left, x_right, f, tag):
+    def key_derivation(self, x_left, x_right, f):
         """
         Derives encryption key for given input parameters
         :param x_left:
@@ -117,7 +118,7 @@ class Riffpe:
         sep_next = ">"
         r = sep_prev.join(map(str, x_left)) + \
             "-" + sep_next.join(map(str, x_right)) + \
-            "-" + str(f) + "-" + tag
+            "-" + str(f)
         k_i = self.prf(r)
         return k_i
 
