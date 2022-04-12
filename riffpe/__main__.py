@@ -7,10 +7,12 @@ from urllib import parse
 import json
 import requests
 from pathlib import Path
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad
+#from Crypto.Cipher import AES
+#from Crypto.Util.Padding import pad
 from ff3 import FF3Cipher
 import pyffx
+
+from time import perf_counter_ns
 
 def random_message(c:int, l:int):
     """
@@ -64,12 +66,12 @@ if __name__ == '__main__':
 
     args, args_unknown = parser.parse_known_args()
 
-    n = 100
-    l = 0
-    chops = 1
+    n = 10
+    l = 2
+    chops = 2
 
     key = b'\xefTT\xc89\xd0ap\xd7M\x97V\xd3\x82h\xeb'
-    tag = "email@am"
+    tag = "exmil@am"
 
 
     plaintext = ""
@@ -92,9 +94,13 @@ if __name__ == '__main__':
         plaintext = args.encrypt
         l = len(plaintext)
         #mode = "encrypt"
+        start = perf_counter_ns()
         c = Riffpe(n, l, key, tag, chops)
         enc = c.enc(plaintext)
+        end = perf_counter_ns()
+        print(args.encrypt)
         print(str(enc))
+        print("time: %s" % (end - start))
     elif args.decrypt:
         ciphertext = args.decrypt
         #mode = "decrypt"
@@ -104,7 +110,7 @@ if __name__ == '__main__':
         print(str(dec))
     elif args.test:
         tests = args.test
-        l = 16
+        l = 2
         n = 10
         c = Riffpe(n, l, key, tag, chops)
         w = {}
@@ -112,7 +118,7 @@ if __name__ == '__main__':
         for m in range(tests):
             x = [random.randint(0, n - 1) for iter in range(l)]
             #print("mesage: " + str(x))
-            ency = c.enc("tag", x)
+            ency = c.enc(x)
             #print(str(ency))
             w[m] = ency
 
@@ -120,8 +126,8 @@ if __name__ == '__main__':
     elif args.generate:
         tests = args.generate
         fl = {}
-        n = 10000
-        l = 1
+        n = 10
+        l = 2
         #n = 10
         #l = 4
         for m in range(tests):
@@ -149,18 +155,42 @@ if __name__ == '__main__':
         #n = 100
         #l = 3
         #c = Riffpe(n, l, key, chops)
+        l = 2
+        n = 10
+        c = Riffpe(n, l, key.encode(), tag, chops)
         w = {}
+        tot_time = 0
         for m in fl:
             x = fl[m]
-            pt = x[0]
+            pt = x[0] + x[1] # + x[2] + x[3]
+            #print("w " + pt)
+            #print(m)
             #c = FF3Cipher(10, key, tweak)
-            c = pyffx.Integer(key.encode(), length=4)
             #cipher = AES.new(key, AES.MODE_CBC, bytearray(AES.block_size))
             #print(str(pt))
-            encrypted = c.encrypt(str(pt))
-            w[m] = encrypted
+            start = perf_counter_ns()
+
+            if args.compare == "ffx":
+                c = pyffx.Integer(key.encode(), length=16)
+                encrypted = c.encrypt(str(pt))
+                w[m] = encrypted
+            else:
+                # riffpe part
+                ency = c.enc(x)
+                #print(ency)
+                w[m] = ency
+                #print("w[%s] = %s" % (m, w[m]))
+
+            end = perf_counter_ns()
+
+            tot_time = tot_time + end - start
 
             #print(str(x))
             #ency = c.enc("tag", x)
 
             #w[m] = ct
+
+        print(len(w))
+        re = random.randint(0, len(w))
+        print("w[%s] = %s" % (re, w[str(re)]))
+        print(tot_time / len(w))

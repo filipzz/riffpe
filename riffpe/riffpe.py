@@ -56,8 +56,7 @@ class Riffpe:
 
     def enc(self, x):
         """
-        Encrypts x for given tag by calling twice the round function
-        :param tag:
+        Encrypts x by calling twice the round function
         :param x: input message
         :return:
         """
@@ -72,7 +71,6 @@ class Riffpe:
     def round_inv(self, f, m):
         """
         Computes the inverse of the round function
-        :param tag:
         :param f: phase number: 0 - absoribing phase, 1 - squeezing phase
         :param m: message to be parsed
         :return:
@@ -99,7 +97,6 @@ class Riffpe:
 
         # inverting squeezing phase
         y = self.round_inv(1, z)
-
         # inverting absorbing phase
         x = self.round_inv(0, y)
 
