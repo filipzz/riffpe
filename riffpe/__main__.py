@@ -71,7 +71,7 @@ if __name__ == '__main__':
     chops = 2
 
     key = b'\xefTT\xc89\xd0ap\xd7M\x97V\xd3\x82h\xeb'
-    tag = "exmil@am"
+    tag = b"exmil@am"
 
 
     plaintext = ""
@@ -93,6 +93,7 @@ if __name__ == '__main__':
     if args.encrypt:
         plaintext = args.encrypt
         l = len(plaintext)
+        assert all(c < n for c in plaintext)
         #mode = "encrypt"
         start = perf_counter_ns()
         c = Riffpe(n, l, key, tag, chops)
@@ -103,6 +104,7 @@ if __name__ == '__main__':
         print("time: %s" % (end - start))
     elif args.decrypt:
         ciphertext = args.decrypt
+        assert all(c < n for c in ciphertext)
         #mode = "decrypt"
         l = len(ciphertext)
         c = Riffpe(n, l, key, tag, chops)
@@ -110,19 +112,18 @@ if __name__ == '__main__':
         print(str(dec))
     elif args.test:
         tests = args.test
-        l = 2
+        l = 6
         n = 10
         c = Riffpe(n, l, key, tag, chops)
-        w = {}
 
         for m in range(tests):
             x = [random.randint(0, n - 1) for iter in range(l)]
             #print("mesage: " + str(x))
             ency = c.enc(x)
             #print(str(ency))
-            w[m] = ency
+            decx = c.dec(ency)
+            assert decx == x
 
-        #print(str(w))
     elif args.generate:
         tests = args.generate
         fl = {}

@@ -1,38 +1,37 @@
+import struct
+
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
-from riffpe.perm import Perm
-
+from .perm import Perm
+from .tweakable_prng import CBCTweakablePRNG
 
 class Riffpe:
-    def __init__(self, c, l, key, tweak, chop = 1):
+    def __init__(self, c: int, l: int, key: bytes(16), tweak: bytes, chop = 1):
         self.c = c
         self.l = l
         self.key = key
         self.tweak = tweak
         self.chop = chop
+
+        self.kdf_bytes = 1 # TODO: adjust to c
+        self.kdf_order = 'little'
+
+        self.perm_tweak_pfx = struct.pack('<IcIcs', self.c, b'_', self.l, b'^', self.tweak)
+        self.perm_tweak_pfx = pad(self.perm_tweak_pfx, AES.block_size)
+        self.perm_fun = Perm(self.c, self.chop)
         #print("here we go %s %s %s" % (c, l, tweak, chop))
 
-    def perm(self, x: int, key: bytearray(16), inv: int):
+    def perm(self, x: int, tweak: bytes, inv: int):
         """
         Returns a value of a pseudorandom permutation (or its inverse)
         :param x: element to be permuted
-        :param key: key that is used to generate the permutation
+        :param tweak: tweak that is used to generate the permutation
         :param inv: if equal to 0 then the permutation is evaluated if 1 then its inverse
         :return:
         """
-        pi = Perm(self.c, key, self.chop)
-        return pi.perm(pad((str(self.c) + "_" + str(self.l) + "^" + self.tweak).encode(), AES.block_size), x, inv)
-
-    def prf(self, x):
-        """
-        Returns a pseudo-random value
-        :param x: input string
-        :return: returns 16-pseudorandom bytes
-        """
-        cipher = AES.new(self.key, AES.MODE_CBC, bytearray(AES.block_size))
-        encrypted = cipher.encrypt(pad(str(x).encode(), AES.block_size))
-        return encrypted[-AES.block_size:]
+        prng = CBCTweakablePRNG(self.key, self.perm_tweak_pfx + tweak)
+        return self.perm_fun.perm(prng, x, inv)
 
     def round(self, f, m):
         """
@@ -43,16 +42,15 @@ class Riffpe:
         :return:
         """
 
-        x_left = []
+        X = list(m)
+        assert len(X) == self.l
 
-        for i in range(self.l):
-            x = m[i]
-            x_right = m[i + 1:]
-            k_i = self.key_derivation(x_left, x_right, f)
-            y = self.perm(x, k_i, 0)
-            x_left.append(y)
+        for i, x in enumerate(X):
+            tweak = self.tweak_derivation(X[:i], X[i+1:], f)
+            y = self.perm(x, tweak, False)
+            X[i] = y
 
-        return x_left
+        return X
 
     def enc(self, x):
         """
@@ -76,16 +74,16 @@ class Riffpe:
         :return:
         """
 
-        x_right = []
+        X = list(m)
+        assert len(X) == self.l
 
-        for i in range(self.l):
-            y = m[self.l - 1 - i]
-            x_left = m[:-1 - i]
-            k_i = self.key_derivation(x_left, x_right, f)
-            z = self.perm(y, k_i, 1)
-            x_right = [z] + x_right
+        for i in range(self.l-1, -1, -1):
+            x = X[i]
+            tweak = self.tweak_derivation(X[:i], X[i+1:], f)
+            y = self.perm(x, tweak, True)
+            X[i] = y
 
-        return x_right
+        return X
 
     def dec(self, z):
         """
@@ -101,21 +99,40 @@ class Riffpe:
         x = self.round_inv(0, y)
 
         return x
+    
+    def _kdf_el_to_bytes(self, el):
+        return el.to_bytes(self.kdf_bytes, self.kdf_order)
 
-    def key_derivation(self, x_left, x_right, f):
+    def tweak_derivation(self, x_left, x_right, f):
         """
         Derives encryption key for given input parameters
         :param x_left:
         :param x_right:
         :param f:
-        :param tag:
         :return:
         """
-        sep_prev = "<"
-        sep_next = ">"
-        r = sep_prev.join(map(str, x_left)) + \
-            "-" + sep_next.join(map(str, x_right)) + \
-            "-" + str(f)
-        k_i = self.prf(r)
-        return k_i
+        # sep_prev = b"<"
+        # sep_next = b">"
+        # r = sep_prev.join(x.to_bytes(self.kdf_bytes, self.kdf_order) for x in x_left) + \
+        #     b"-" + sep_next.join(x.to_bytes(self.kdf_bytes, self.kdf_order) for x in x_right) + \
+        #     b"-" + str(f)
+        # r = sep_prev.join(map(self._kdf_el_to_bytes, x_left)) \
+        #   + b'-' + sep_next.join(map(self._kdf_el_to_bytes, x_right)) \
+        #   + b'-' + self._kdf_el_to_bytes(f)
+        # return pad(r, AES.block_size)
+
+        tweak_len = self.l * self.kdf_bytes
+        tweak_buf = bytearray(tweak_len + (-tweak_len) % 16)
+        idx = 0
+        for x in x_left:
+            tweak_buf[idx:idx+self.kdf_bytes] = self._kdf_el_to_bytes(x)
+            idx += self.kdf_bytes
+        # The place with f can serve as a neat separator between left and right sides;
+        # to avoid "looking like" regular element, another marking could be used, e.g. A5 for f=0 amd 5A for f=1
+        tweak_buf[idx:idx+self.kdf_bytes] = self._kdf_el_to_bytes(f)
+        for x in x_right:
+            tweak_buf[idx:idx+self.kdf_bytes] = self._kdf_el_to_bytes(x)
+            idx += self.kdf_bytes
+
+        return tweak_buf
 
