@@ -1,7 +1,7 @@
 import argparse
 import random
 
-from riffpe.riffpe import Riffpe
+from riffpe import Riffpe
 
 from urllib import parse
 import json
@@ -128,7 +128,7 @@ if __name__ == '__main__':
         tests = args.generate
         fl = {}
         n = 10
-        l = 2
+        l = 16
         #n = 10
         #l = 4
         for m in range(tests):
@@ -152,35 +152,29 @@ if __name__ == '__main__':
         fl = read("data.json")
         key = "EF4359D8D580AA4F7F036D6F04FC6A94"
         tweak = "D8E7920AFA330A73"
-
-        #n = 100
-        #l = 3
-        #c = Riffpe(n, l, key, chops)
-        l = 2
+        l = 16
         n = 10
-        c = Riffpe(n, l, key.encode(), tag, chops)
+
         w = {}
         tot_time = 0
         for m in fl:
             x = fl[m]
-            pt = x[0] + x[1] # + x[2] + x[3]
-            #print("w " + pt)
-            #print(m)
-            #c = FF3Cipher(10, key, tweak)
-            #cipher = AES.new(key, AES.MODE_CBC, bytearray(AES.block_size))
-            #print(str(pt))
+            pt = ''.join(str(digit) for digit in x)
             start = perf_counter_ns()
 
             if args.compare == "ffx":
-                c = pyffx.Integer(key.encode(), length=16)
-                encrypted = c.encrypt(str(pt))
+                c = pyffx.Integer(key.encode(), length=l)
+                encrypted = c.encrypt(pt)
+                w[m] = encrypted
+            elif args.compare == 'ff3':
+                c = FF3Cipher(key, tweak, radix=n)
+                encrypted = c.encrypt(pt)
                 w[m] = encrypted
             else:
                 # riffpe part
-                ency = c.enc(x)
-                #print(ency)
-                w[m] = ency
-                #print("w[%s] = %s" % (m, w[m]))
+                c = Riffpe(n, l, key.encode(), tag, chops)
+                encrypted = c.enc(x)
+                w[m] = encrypted
 
             end = perf_counter_ns()
 

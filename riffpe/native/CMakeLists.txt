@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
-set(CMAKE_CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
@@ -12,22 +10,6 @@ endif()
 set(LANGUAGES CXX)
 
 project(riffpe-native ${LANGUAGES})
-
-if(MSVC)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        add_compile_options(
-            $<$<CONFIG:RELEASE>:-O3>
-            $<$<COMPILE_LANGUAGE:CXX>:-march=native>
-            $<$<COMPILE_LANGUAGE:CXX>:-mtune=native>
-        )
-    endif()
-else()
-    add_compile_options(
-        $<$<CONFIG:RELEASE>:-O3>
-        $<$<COMPILE_LANGUAGE:CXX>:-march=native>
-        $<$<COMPILE_LANGUAGE:CXX>:-mtune=native>
-    )
-endif()
 
 find_program(CCACHE_PATH ccache)
 if(CCACHE_PATH)
@@ -45,6 +27,16 @@ FetchContent_Declare(
     GIT_TAG        v2.6.2
 )
 FetchContent_MakeAvailable(pybind11)
+
+set (CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include(CheckHWAcceleration)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(${RIFFPE_OPT_FLAGS})
+endif()
+if(HAS_MM_LOADU_SI64)
+    add_compile_definitions(HAS_MM_LOADU_SI64)
+endif()
 
 pybind11_add_module(riffpe_native ${CMAKE_CURRENT_SOURCE_DIR}/src/riffpe_native.cpp)
 

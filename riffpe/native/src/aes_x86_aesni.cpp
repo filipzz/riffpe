@@ -78,32 +78,35 @@ namespace riffpe
                     __m128i temp1 = loadu_mm128i(key);
                     __m128i temp3 = loadu_mm64i(key+16);
 
+                    #define SHUFFLE_HELPER_A(x) _mm_castpd_si128(_mm_shuffle_pd(_mm_castsi128_pd(_tmp_key[x]), _mm_castsi128_pd(temp1),0))
+                    #define SHUFFLE_HELPER_B()  _mm_castpd_si128(_mm_shuffle_pd(_mm_castsi128_pd(temp1), _mm_castsi128_pd(temp3),1))
                     _tmp_key[0]=temp1;
                     _tmp_key[1]=temp3;
-
                     key_expansion_assist_b<0x01>(temp1, temp3);
-                    _tmp_key[1] = (__m128i)_mm_shuffle_pd((__m128d)_tmp_key[1], (__m128d)temp1,0);
-                    _tmp_key[2] = (__m128i)_mm_shuffle_pd((__m128d)temp1,(__m128d)temp3,1);
+                    _tmp_key[1] = SHUFFLE_HELPER_A(1);
+                    _tmp_key[2] = SHUFFLE_HELPER_B();
                     key_expansion_assist_b<0x02>(temp1, temp3);
                     _tmp_key[3]=temp1;
                     _tmp_key[4]=temp3;
                     key_expansion_assist_b<0x04>(temp1, temp3);
-                    _tmp_key[4] = (__m128i)_mm_shuffle_pd((__m128d)_tmp_key[4], (__m128d)temp1,0);
-                    _tmp_key[5] = (__m128i)_mm_shuffle_pd((__m128d)temp1,(__m128d)temp3,1);
+                    _tmp_key[4] = SHUFFLE_HELPER_A(4);
+                    _tmp_key[5] = SHUFFLE_HELPER_B();
                     key_expansion_assist_b<0x08>(temp1, temp3);
                     _tmp_key[6]=temp1;
                     _tmp_key[7]=temp3;
                     key_expansion_assist_b<0x10>(temp1, temp3);
-                    _tmp_key[7] = (__m128i)_mm_shuffle_pd((__m128d)_tmp_key[7], (__m128d)temp1,0);
-                    _tmp_key[8] = (__m128i)_mm_shuffle_pd((__m128d)temp1,(__m128d)temp3,1);
+                    _tmp_key[7] = SHUFFLE_HELPER_A(7);
+                    _tmp_key[8] = SHUFFLE_HELPER_B();
                     key_expansion_assist_b<0x20>(temp1, temp3);
                     _tmp_key[9]=temp1;
                     _tmp_key[10]=temp3;
                     key_expansion_assist_b<0x40>(temp1, temp3);
-                    _tmp_key[10] = (__m128i)_mm_shuffle_pd((__m128d)_tmp_key[10], (__m128d)temp1,0);
-                    _tmp_key[11] = (__m128i)_mm_shuffle_pd((__m128d)temp1,(__m128d)temp3,1);
+                    _tmp_key[10] = SHUFFLE_HELPER_A(10);
+                    _tmp_key[11] = SHUFFLE_HELPER_B();
                     key_expansion_assist_b<0x80>(temp1, temp3);
                     _tmp_key[12]=temp1;
+                    #undef SHUFFLE_HELPER_A
+                    #undef SHUFFLE_HELPER_B
                     #pragma unroll
                     for(int i=0; i<_tmp_key.size(); ++i)
                         storeu_mm128i(_key[i].data(), _tmp_key[i]);
@@ -210,7 +213,7 @@ namespace riffpe
             {
                 if(in)
                 {
-                    cbc_state ^= loadu_mm128i(in);
+                    cbc_state = _mm_xor_si128(cbc_state, loadu_mm128i(in));
                     in += 16;
                 }
                 do_aes_enc_transform(cbc_state, key, _round_count);

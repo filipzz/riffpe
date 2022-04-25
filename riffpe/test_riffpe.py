@@ -1,7 +1,7 @@
 from Crypto.Random import get_random_bytes
 import random
 
-from riffpe.riffpe import Riffpe
+from riffpe import Riffpe
 
 
 def random_message(c:int, l:int):
@@ -21,7 +21,7 @@ def test_enc():
 
     key = get_random_bytes(16)
     #key = b'\xefTT\xc89\xd0ap\xd7M\x97V\xd3\x82h\xeb'
-    tweak = "momo"
+    tweak = b"momo"
     w = Riffpe(c, l, key, tweak, 1)
 
     message = random_message(c, l)

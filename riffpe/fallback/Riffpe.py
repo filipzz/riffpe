@@ -3,22 +3,34 @@ import struct
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
-from .perm import Perm
-from .tweakable_prng import CBCTweakablePRNG
+from .Perm import Perm
+from .CBCTweakablePRNG import CBCTweakablePRNG
+
 
 class Riffpe:
-    def __init__(self, c: int, l: int, key: bytes(16), tweak: bytes, chop = 1):
+
+    def __init__(self, c: int, l: int, key: bytes(16), tweak: bytes, chop=1):
         self.c = c
         self.l = l
         self.key = key
         self.tweak = tweak
         self.chop = chop
 
-        self.kdf_bytes = 1 # TODO: adjust to c
         self.kdf_order = 'little'
+        if c < 256:
+            self.kdf_bytes = 1
+        elif c < 65536:
+            self.kdf_bytes = 2
+        elif c < 4294967296:
+            self.kdf_bytes = 4
+        else:
+            raise ValueError(f"Radix {c} too big (must be < 32 bits)")
 
-        self.perm_tweak_pfx = struct.pack('<IcIcs', self.c, b'_', self.l, b'^', self.tweak)
-        self.perm_tweak_pfx = pad(self.perm_tweak_pfx, AES.block_size)
+        self.perm_tweak_pfx = struct.pack(f'<IcIc{len(self.tweak)}s', self.c,
+                                          b'_', self.l, b'^', self.tweak)
+        self.perm_tweak_pfx = pad(self.perm_tweak_pfx,
+                                  AES.block_size,
+                                  style='pkcs7')
         self.perm_fun = Perm(self.c, self.chop)
         #print("here we go %s %s %s" % (c, l, tweak, chop))
 
@@ -41,16 +53,10 @@ class Riffpe:
         :param m: message to be transformed
         :return:
         """
-
-        X = list(m)
-        assert len(X) == self.l
-
-        for i, x in enumerate(X):
-            tweak = self.tweak_derivation(X[:i], X[i+1:], f)
+        for i, x in enumerate(m):
+            tweak = self.tweak_derivation(m[:i], m[i + 1:], f)
             y = self.perm(x, tweak, False)
-            X[i] = y
-
-        return X
+            m[i] = y
 
     def enc(self, x):
         """
@@ -58,13 +64,15 @@ class Riffpe:
         :param x: input message
         :return:
         """
+        x = list(x)
+        assert len(x) == self.l
 
-        # absrobing phase
-        y = self.round(0, x)
-        # squeeze phase
-        z = self.round(1, y)
+        # absorbing phase
+        self.round(0, x)
+        # squeezing phase
+        self.round(1, x)
 
-        return z
+        return x
 
     def round_inv(self, f, m):
         """
@@ -73,33 +81,29 @@ class Riffpe:
         :param m: message to be parsed
         :return:
         """
-
-        X = list(m)
-        assert len(X) == self.l
-
-        for i in range(self.l-1, -1, -1):
-            x = X[i]
-            tweak = self.tweak_derivation(X[:i], X[i+1:], f)
+        for i in range(self.l - 1, -1, -1):
+            x = m[i]
+            tweak = self.tweak_derivation(m[:i], m[i + 1:], f)
             y = self.perm(x, tweak, True)
-            X[i] = y
+            m[i] = y
 
-        return X
-
-    def dec(self, z):
+    def dec(self, x):
         """
         Decrypts z for given tag
         :param tag:
         :param z:
         :return:
         """
+        x = list(x)
+        assert len(x) == self.l
 
         # inverting squeezing phase
-        y = self.round_inv(1, z)
+        self.round_inv(1, x)
         # inverting absorbing phase
-        x = self.round_inv(0, y)
+        self.round_inv(0, x)
 
         return x
-    
+
     def _kdf_el_to_bytes(self, el):
         return el.to_bytes(self.kdf_bytes, self.kdf_order)
 
@@ -125,14 +129,14 @@ class Riffpe:
         tweak_buf = bytearray(tweak_len + (-tweak_len) % 16)
         idx = 0
         for x in x_left:
-            tweak_buf[idx:idx+self.kdf_bytes] = self._kdf_el_to_bytes(x)
+            tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(x)
             idx += self.kdf_bytes
         # The place with f can serve as a neat separator between left and right sides;
         # to avoid "looking like" regular element, another marking could be used, e.g. A5 for f=0 amd 5A for f=1
-        tweak_buf[idx:idx+self.kdf_bytes] = self._kdf_el_to_bytes(f)
+        tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(f)
+        idx += self.kdf_bytes
         for x in x_right:
-            tweak_buf[idx:idx+self.kdf_bytes] = self._kdf_el_to_bytes(x)
+            tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(x)
             idx += self.kdf_bytes
 
         return tweak_buf
-

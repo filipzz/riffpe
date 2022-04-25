@@ -2,6 +2,7 @@
 
 #include <wmmintrin.h>
 #include <immintrin.h>
+#include <emmintrin.h>
 
 namespace riffpe
 {
@@ -27,15 +28,19 @@ namespace riffpe
      *  locations - restricted to 64 bits only */
     template<typename T>
     inline __m128i loadu_mm64i(const T* ptr)
-    /* Workaround for missing _mm_loadu_si64 intrinsic in GCC */
-    { return __m128i{ *reinterpret_cast<const int64_t*>(ptr), 0 }; }
+    {
+      /* Workaround for missing _mm_loadu_si64 intrinsic in GCC */
+#if !HAS_MM_LOADU_SI64
+      return __m128i{ *reinterpret_cast<const int64_t*>(ptr), 0 };
+#else
+      return _mm_loadu_si64(ptr);
+#endif
+    }
 
     /** This helper inline reinterprets and stores __m128i to potentially unaligned
      *  locations */
     template<typename T>
     inline void storeu_mm128i(T* out, const __m128i& value)
-    {
-      _mm_storeu_si128( reinterpret_cast<__m128i*>(out), value );
-    }
+    { _mm_storeu_si128( reinterpret_cast<__m128i*>(out), value ); }
   }
 }
