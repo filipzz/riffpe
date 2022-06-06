@@ -4,7 +4,7 @@
 
 - create virtual environment: ```python3 -m venv virt```
 - activate: ```source virt/bin/activate```
-- add requirements: ```pip -r requirements.txt```
+- add requirements: ```pip install -r requirements.txt```
 
 ## Usage
 
