@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Riffpe"
+version = "0.0.1"
+authors = [
+  { name="Filip Zagórski", email="filip.zagorski@pwr.edu.pl" },
+  { name="Marcin Słowik", email="marcin.slowik@pwr.edu.pl" },
+]
+description = "Riffle-Shuffle-based Format Preserving Encryption"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/filipzz/riffpe"
+"Bug Tracker" = "https://github.com/filipzz/riffpe/issues"
