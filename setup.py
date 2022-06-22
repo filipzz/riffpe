@@ -11,7 +11,7 @@ with open("setup_cmake.py") as f:
 
 
 try:
-    setup(ext_modules=[CMakeExtension("riffpe._native", "riffpe")], cmdclass={"build_ext": CMakeBuild})
+    setup(ext_modules=[CMakeExtension("riffpe._native", "pyriffpe/riffpe")], cmdclass={"build_ext": CMakeBuild})
 except (subprocess.CalledProcessError, ImportError):
     warnings.warn("Native build failed, native implementation will not be installed.")
     setup()

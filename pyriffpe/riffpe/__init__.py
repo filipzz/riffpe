@@ -2,6 +2,8 @@
 # set the following line to "True":
 force_fallback = False
 
+from ._common import TweakablePRNG
+
 # Try to import native implementation, use fallback (pure Python) otherwise.
 try:
     if force_fallback: raise ImportError
@@ -15,4 +17,4 @@ except ImportError:
     from ._fallback.Riffpe import Riffpe
     from ._fallback.CBCTweakablePRNG import CBCTweakablePRNG
 
-__all__ = ('Riffpe', 'CBCTweakablePRNG')
+__all__ = ('TweakablePRNG', 'Riffpe', 'CBCTweakablePRNG')

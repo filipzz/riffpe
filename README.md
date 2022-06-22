@@ -10,7 +10,7 @@
 To install developement version from source issue:
 
 ```bash
-pip install -e pyriffpe/
+pip install -e .
 ```
 
 ## Usage

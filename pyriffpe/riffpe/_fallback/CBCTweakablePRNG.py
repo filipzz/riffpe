@@ -1,4 +1,4 @@
-from ..common.TweakablePRNG import TweakablePRNG
+from .._common.TweakablePRNG import TweakablePRNG
 from Crypto.Cipher import AES
 
 class CBCTweakablePRNG(TweakablePRNG):
