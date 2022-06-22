@@ -20,14 +20,14 @@ FetchContent_MakeAvailable(pybind11)
 
 
 # TODO: optionally allow linking to an already built libriffpe instead of adding it as a subproject
-set(RIFFPE_LIBRIFFPE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../libriffpe CACHE PATH "Path to libriffpe CMake sources")
+set(RIFFPE_LIBRIFFPE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libriffpe CACHE PATH "Path to libriffpe CMake sources")
 add_subdirectory(${RIFFPE_LIBRIFFPE_DIR} libriffpe)
 
 
 project(pyriffpe CXX)
 
-pybind11_add_module(libriffpe_bindings ${CMAKE_CURRENT_SOURCE_DIR}/libriffpe_bindings.cpp)
-target_link_libraries(libriffpe_bindings PUBLIC riffpe)
+pybind11_add_module(_native ${CMAKE_CURRENT_SOURCE_DIR}/_native.cpp)
+target_link_libraries(_native PUBLIC riffpe)
 
 # Install Python modules to the root source directory (this is where the Python interface will be looking for them)
-install(TARGETS libriffpe_bindings DESTINATION ${CMAKE_SOURCE_DIR})
+install(TARGETS _native DESTINATION ${CMAKE_SOURCE_DIR})

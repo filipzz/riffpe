@@ -68,7 +68,7 @@ Riffpe make_riffpe_py(uint32_t c, uint32_t l, py::bytes key, py::bytes tweak, ui
     return Riffpe(c, l, reinterpret_cast<const uint8_t*>(key_info.ptr), key_len, reinterpret_cast<const uint8_t*>(tweak_info.ptr), tweak_len, chop);
 }
 
-PYBIND11_MODULE(libriffpe_bindings, m)
+PYBIND11_MODULE(_native, m)
 {
     m.doc() = "Native Riffpe tools";
 

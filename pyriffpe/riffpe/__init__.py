@@ -6,13 +6,13 @@ force_fallback = False
 try:
     if force_fallback: raise ImportError
 
-    from .native.libriffpe_bindings import Riffpe, CBCTweakablePRNG
+    from ._native import Riffpe, CBCTweakablePRNG
 
 except ImportError:
     import warnings
     warnings.warn("Using fallback Riffpe implementation")
 
-    from .fallback.Riffpe import Riffpe
-    from .fallback.CBCTweakablePRNG import CBCTweakablePRNG
+    from ._fallback.Riffpe import Riffpe
+    from ._fallback.CBCTweakablePRNG import CBCTweakablePRNG
 
 __all__ = ('Riffpe', 'CBCTweakablePRNG')
