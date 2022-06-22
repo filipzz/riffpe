@@ -54,7 +54,7 @@ class Riffpe:
         :return:
         """
         for i, x in enumerate(m):
-            tweak = self.tweak_derivation(m[:i], m[i + 1:], f)
+            tweak = self.tweak_derivation(m[:i], m[i + 1:], f, i)
             y = self.perm(x, tweak, False)
             m[i] = y
 
@@ -83,7 +83,7 @@ class Riffpe:
         """
         for i in range(self.l - 1, -1, -1):
             x = m[i]
-            tweak = self.tweak_derivation(m[:i], m[i + 1:], f)
+            tweak = self.tweak_derivation(m[:i], m[i + 1:], f, i)
             y = self.perm(x, tweak, True)
             m[i] = y
 
@@ -107,7 +107,7 @@ class Riffpe:
     def _kdf_el_to_bytes(self, el):
         return el.to_bytes(self.kdf_bytes, self.kdf_order)
 
-    def tweak_derivation(self, x_left, x_right, f):
+    def tweak_derivation(self, x_left, x_right, f, i):
         """
         Derives encryption key for given input parameters
         :param x_left:
@@ -115,17 +115,7 @@ class Riffpe:
         :param f:
         :return:
         """
-        # sep_prev = b"<"
-        # sep_next = b">"
-        # r = sep_prev.join(x.to_bytes(self.kdf_bytes, self.kdf_order) for x in x_left) + \
-        #     b"-" + sep_next.join(x.to_bytes(self.kdf_bytes, self.kdf_order) for x in x_right) + \
-        #     b"-" + str(f)
-        # r = sep_prev.join(map(self._kdf_el_to_bytes, x_left)) \
-        #   + b'-' + sep_next.join(map(self._kdf_el_to_bytes, x_right)) \
-        #   + b'-' + self._kdf_el_to_bytes(f)
-        # return pad(r, AES.block_size)
-
-        tweak_len = self.l * self.kdf_bytes
+        tweak_len = (self.l + 1) * self.kdf_bytes
         tweak_buf = bytearray(tweak_len + (-tweak_len) % 16)
         idx = 0
         for x in x_left:
@@ -138,5 +128,6 @@ class Riffpe:
         for x in x_right:
             tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(x)
             idx += self.kdf_bytes
+        tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(i)
 
         return tweak_buf

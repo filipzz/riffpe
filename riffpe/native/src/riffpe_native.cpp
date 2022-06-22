@@ -152,6 +152,7 @@ public:
             ElType x = message[j];
             // Fixme: use some kind of f marker instead of f
             message[j] = f;
+            message[_l] = j;
             // Absorb the message view (+f marker) as the rest of tweak into the AES state
             // This is equivalent to computing CBC-MAC into aes_state.
             _aes_engine.encrypt_cbc(reinterpret_cast<const uint8_t*>(message), nullptr, 
@@ -164,7 +165,7 @@ public:
     template<typename ElType, bool Inverse>
     void enc_dec_impl(std::vector<uint32_t>& message)
     {
-        size_t tweak_len = sizeof(ElType) * _l;
+        size_t tweak_len = sizeof(ElType) * (_l + 1);
         size_t tweak_padded_blocks = (tweak_len + aes_engine_type::block_size - 1)
                                    / aes_engine_type::block_size;
         size_t tweak_padded_size   = tweak_padded_blocks

@@ -50,11 +50,13 @@ namespace riffpe
     /** This helper inline queries CPU capabilites for AES-NI support */
     inline bool has_aesni()
     {
-      int32_t cpuid[4];
-      #if HAS_CPUID
-      __cpuid(cpuid, 0);
-      #else
+      unsigned int cpuid[4];
+      #if CXX_CPUID_AVAILABLE
+      __cpuid(reinterpret_cast<int[4]>(cpuid), 0);
+      #elif CXX_GET_CPUID_AVAILABLE
       __get_cpuid(0, &cpuid[0], &cpuid[1], &cpuid[2], &cpuid[3]);
+      #else
+      #  error No CPUID intrinsic found
       #endif
       return (bool)(cpuid[2] /* ECX */ & (1 << 25) /* bit 25 */);
     }
