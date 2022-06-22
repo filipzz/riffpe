@@ -1,20 +1,29 @@
 # Riffpe - a Riffle-Shuffle-based Format Preserving Encryption
 
-## Install
 
-- create virtual environment: ```python3 -m venv virt```
-- activate: ```source virt/bin/activate```
-- add requirements: ```pip install -r requirements.txt```
+## Requirements
+
+[TBD]
+
+## Installation
+
+To install developement version from source issue:
+
+```bash
+pip install -e pyriffpe/
+```
 
 ## Usage
 
-Encrypt message
+As a standalone module:
+
+Message encryption:
 
 ```python
 python -m riffpe -n 100 -e 11 10 12 3
 ```
 
-Decrypt
+Message decryption:
 
 ```python
 python -m riffpe -n 100 -d 26 30 13 67
@@ -22,6 +31,4 @@ python -m riffpe -n 100 -d 26 30 13 67
 
 ## Testing
 
-```bash
-python -m pytest
-```
+[TBD]
