@@ -1,4 +1,4 @@
-# riffpe
+# Riffpe - a Riffle-Shuffle-based Format Preserving Encryption
 
 ## Install
 

@@ -7,16 +7,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-set(LANGUAGES CXX)
-
-project(riffpe-native ${LANGUAGES})
-
-find_program(CCACHE_PATH ccache)
-if(CCACHE_PATH)
-    set(CCACHE_CACHE_DIR ${CMAKE_CACHEFILE_DIR}/CMakeFiles/ccache)
-    make_directory(${CCACHE_CACHE_DIR})
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "\"${CMAKE_COMMAND}\" -E env \"CCACHE_DIR=${CCACHE_CACHE_DIR}\" \"${CCACHE_PATH}\"")
-endif()
+project(riffpe-native CXX)
 
 # CMake 3.14+
 include(FetchContent)

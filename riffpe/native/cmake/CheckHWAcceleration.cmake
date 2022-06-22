@@ -8,8 +8,10 @@ if (NOT MSVC)
   check_cxx_compiler_flag (-maes         CXX_FLAG_MAES_AVAILABLE)
 endif()
 
+
 # Detect instruction support in intrinsics
 check_cxx_source_compiles("#include \"${CMAKE_CURRENT_LIST_DIR}/test_sources/detect_x86_mm_loadu_si64.cpp\" " HAS_MM_LOADU_SI64)
+check_cxx_source_compiles("#include \"${CMAKE_CURRENT_LIST_DIR}/test_sources/detect_x86_cpuid.cpp\" " HAS_CPUID)
 
 # TODO: Feature detection in cross-compiling scenario
 if (CMAKE_CROSSCOMPILING)

@@ -1,0 +1,5 @@
+* Main like ff3 (https://pypi.org/project/ff3/) 
+* Rewrite README.md
+* Testing, including benchmark (compare to FF1, FF3)
+* Add block counter to tweak derivation (i)
+* 

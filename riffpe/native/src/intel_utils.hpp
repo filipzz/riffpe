@@ -4,6 +4,10 @@
 #include <immintrin.h>
 #include <emmintrin.h>
 
+#if __has_include(<cpuid.h>)
+#  include <cpuid.h>
+#endif
+
 namespace riffpe
 {
   namespace crypto
@@ -42,5 +46,17 @@ namespace riffpe
     template<typename T>
     inline void storeu_mm128i(T* out, const __m128i& value)
     { _mm_storeu_si128( reinterpret_cast<__m128i*>(out), value ); }
+
+    /** This helper inline queries CPU capabilites for AES-NI support */
+    inline bool has_aesni()
+    {
+      int32_t cpuid[4];
+      #if HAS_CPUID
+      __cpuid(cpuid, 0);
+      #else
+      __get_cpuid(0, &cpuid[0], &cpuid[1], &cpuid[2], &cpuid[3]);
+      #endif
+      return (bool)(cpuid[2] /* ECX */ & (1 << 25) /* bit 25 */);
+    }
   }
 }
