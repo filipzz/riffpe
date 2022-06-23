@@ -90,27 +90,7 @@ if __name__ == '__main__':
     #print(str(args.encrypt))
 
 
-    if args.encrypt:
-        plaintext = args.encrypt
-        l = len(plaintext)
-        assert all(c < n for c in plaintext)
-        #mode = "encrypt"
-        start = perf_counter_ns()
-        c = Riffpe(n, l, key, tag, chops)
-        enc = c.enc(plaintext)
-        end = perf_counter_ns()
-        print(args.encrypt)
-        print(str(enc))
-        print("time: %s" % (end - start))
-    elif args.decrypt:
-        ciphertext = args.decrypt
-        assert all(c < n for c in ciphertext)
-        #mode = "decrypt"
-        l = len(ciphertext)
-        c = Riffpe(n, l, key, tag, chops)
-        dec = c.dec(ciphertext)
-        print(str(dec))
-    elif args.test:
+    if args.test:
         tests = args.test
         l = 6
         n = 10

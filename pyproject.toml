@@ -34,6 +34,11 @@ dependencies = [
   "pycryptodome"
 ]
 
+[project.optional-dependencies]
+tests = [
+  "pytest"
+]
+
 [project.urls]
 "Homepage" = "https://github.com/filipzz/riffpe"
 "Bug Tracker" = "https://github.com/filipzz/riffpe/issues"
