@@ -30,33 +30,6 @@ try:
 except ImportError:
     tqdm = lambda x: x
 
-# Benchmark dataset 1: full credit card numbers [16-digit base10 integers]
-# Riffpe configurations under test:
-#  * n=10, l=16 (potentially insecure)
-#  * n=100, l=8
-#  * n=10000, l=4
-
-BENCHMARK_DATASET_1_LENGTH = 10_000
-
-BENCHMARK_DATASET_1 = [
-    random.randrange(10000_0000_0000_0000)
-    for _ in range(BENCHMARK_DATASET_1_LENGTH)
-]
-
-
-# Benchmark dataset 2: inner 6 credit card digits [6-digit base10 integers]
-# Riffpe configurations under test:
-#  * n=10, l=6 (potentially insecure)
-#  * n=100, l=3
-#  * n=1000, l=2
-
-BENCHMARK_DATASET_2_LENGTH = 10_000
-
-BENCHMARK_DATASET_2 = [
-    random.randrange(1000_000)
-    for _ in range(BENCHMARK_DATASET_2_LENGTH)
-]
-
 
 BENCHMARK_TAG = bytes.fromhex("0011223344556677")
 BENCHMARK_KEY = bytes.fromhex("0123456789abcdef0123456789abcdef")
@@ -120,12 +93,49 @@ def benchmark_pyffx(dataset, ndigits, label):
                       fpe.encrypt, fpe.decrypt)
 
 
+# Benchmark dataset 1: full credit card numbers [16-digit base10 integers]
+# Riffpe configurations under test:
+#  * n=10, l=16 (potentially insecure)
+#  * n=100, l=8
+#  * n=10000, l=4
+
+BENCHMARK_DATASET_1_LENGTH = 10_000
+
+BENCHMARK_DATASET_1 = [
+    random.randrange(10000_0000_0000_0000)
+    for _ in range(BENCHMARK_DATASET_1_LENGTH)
+]
+
+
 benchmark_ff3(BENCHMARK_DATASET_1, 16, "[16-digit base10 integers]")
 benchmark_pyffx(BENCHMARK_DATASET_1, 16, "[16-digit base10 integers]")
-
 benchmark_riffpe(BENCHMARK_DATASET_1, 10,    16, "[16-digit base10 integers]", False)
 benchmark_riffpe(BENCHMARK_DATASET_1, 100,   8,  "[16-digit base10 integers]", False)
 benchmark_riffpe(BENCHMARK_DATASET_1, 10000, 4,  "[16-digit base10 integers]", False)
 benchmark_riffpe(BENCHMARK_DATASET_1, 10,    16, "[16-digit base10 integers]", True)
 benchmark_riffpe(BENCHMARK_DATASET_1, 100,   8,  "[16-digit base10 integers]", True)
 benchmark_riffpe(BENCHMARK_DATASET_1, 10000, 4,  "[16-digit base10 integers]", True)
+
+
+# Benchmark dataset 2: inner 6 credit card digits [6-digit base10 integers]
+# Riffpe configurations under test:
+#  * n=10, l=6 (potentially insecure)
+#  * n=100, l=3
+#  * n=1000, l=2
+
+BENCHMARK_DATASET_2_LENGTH = 10_000
+
+BENCHMARK_DATASET_2 = [
+    random.randrange(1000_000)
+    for _ in range(BENCHMARK_DATASET_2_LENGTH)
+]
+
+
+benchmark_ff3(BENCHMARK_DATASET_2, 6, "[6-digit base10 integers]")
+benchmark_pyffx(BENCHMARK_DATASET_2, 6, "[6-digit base10 integers]")
+benchmark_riffpe(BENCHMARK_DATASET_2, 10,   6, "[6-digit base10 integers]", False)
+benchmark_riffpe(BENCHMARK_DATASET_2, 100,  3, "[6-digit base10 integers]", False)
+benchmark_riffpe(BENCHMARK_DATASET_2, 1000, 2, "[6-digit base10 integers]", False)
+benchmark_riffpe(BENCHMARK_DATASET_2, 10,   6, "[6-digit base10 integers]", True)
+benchmark_riffpe(BENCHMARK_DATASET_2, 100,  3, "[6-digit base10 integers]", True)
+benchmark_riffpe(BENCHMARK_DATASET_2, 1000, 2, "[6-digit base10 integers]", True)
