@@ -1,4 +1,4 @@
-from . import Riffpe
+from . import Riffpe, int_to_digits, digits_to_int
 
 import argparse
 import math
@@ -24,6 +24,7 @@ def crypt_main(parser: argparse.ArgumentParser, is_decrypt: bool):
     Universal function for both encryption and decryption
     """
     args = parser.parse_args()
+    order = 'big' if args.big_endian else 'little'
 
     # Parameter validation
     assert len(args.key) in (16, 24, 32)
@@ -34,33 +35,14 @@ def crypt_main(parser: argparse.ArgumentParser, is_decrypt: bool):
                       args.tag,
                       args.chops)
     
-    message_split = [0 for _ in range(args.length)]
-    message_curr = args.message
-    for i in range(args.length):
-        message_curr, message_part = divmod(message_curr, args.base)
-        message_split[i] = message_part
-    
-    # Remainder must be 0
-    assert message_curr == 0
-
-    if args.big_endian:
-        message_split.reverse()
+    message_split = int_to_digits(args.message, args.length, args.base, order)
     process_func = instance.dec if is_decrypt else instance.enc
     output_split = process_func(message_split)
-    # In recombination we iterate in reverse, so only revert on little-endian
-    if not args.big_endian:
-        output_split.reverse()
-    # TODO: it should be possible to fully skip .reverse() calls and instead use iterator reversals.
-    # To be checked.
-
-    output_curr = 0
-    for split_part in output_split:
-        output_curr *= args.base
-        output_curr += split_part
+    output = digits_to_int(output_split, args.base, order)
     
     # Count number of digits for the max value
     # and ensure the printed value is properly padded
 
     no_digits = math.ceil(math.log10(pow(args.base, args.length)))
     
-    print(format(output_curr, f'0{no_digits}d'))
+    print(format(output, f'0{no_digits}d'))

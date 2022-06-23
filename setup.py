@@ -5,7 +5,7 @@ from setuptools import setup
 
 # There doesn't seem to be a way to import local files from setup.py anymore.
 # Ideally, the following would be `from setup_cmake import CMakeExtension, CMakeBuild`
-with open("setup_cmake.py") as f:
+with open("pyriffpe/extras/setup_cmake.py") as f:
     code = compile(f.read(), "somefile.py", 'exec')
     exec(code, globals(), locals())
 

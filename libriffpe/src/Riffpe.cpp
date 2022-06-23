@@ -17,9 +17,15 @@ namespace riffpe
     Riffpe::Riffpe(uint32_t c, uint32_t l, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t chop)
         : _c(c), _l(l), _chop(chop), _aes_engine(aes_engine_type::engine_factory())
     {
-        _perm_bytes_per_value = 16 / chop;
+        _perm_bytes_per_value = aes_engine_type::block_size / chop;
         _perm_msg_len = _perm_bytes_per_value * _c;
-
+        _perm_msg_len_blocks = (_perm_msg_len + aes_engine_type::block_size - 1)
+                             / aes_engine_type::block_size;
+        uint32_t _perm_msg_len_padded = _perm_msg_len_blocks
+                                      * aes_engine_type::block_size;
+        // Use AES-CBC as a PRNG to generate _perm_msg_len bytes
+        _perm_state.resize(_perm_msg_len_padded);
+        
         if(c < 256)
             _el_size = sizeof(uint8_t);
         else if(c < 65536)
@@ -29,7 +35,7 @@ namespace riffpe
         else
             throw std::length_error("Radix too big (must be < 32 bits)");
 
-        _tweak_buf.resize(sizeof(_c) + sizeof(_l) + 2 + tweak_length);
+        std::vector<uint8_t> _tweak_buf(sizeof(_c) + sizeof(_l) + 2 + tweak_length);
         // FIXME: add non-LE version, like in generic AES
         std::memcpy(_tweak_buf.data() + 0, &_c, 4);
         _tweak_buf[4] = '_';
@@ -50,12 +56,6 @@ namespace riffpe
     template<typename ElType, bool Inverse>
     ElType Riffpe::perm(ElType x, aes_state_type& aes_state)
     {
-        size_t _perm_msg_len_blocks = (_perm_msg_len + aes_engine_type::block_size - 1)
-                                    / aes_engine_type::block_size;
-        size_t _perm_msg_len_padded = _perm_msg_len_blocks
-                                    * aes_engine_type::block_size;
-        // Use AES-CBC as a PRNG to generate _perm_msg_len bytes
-        std::vector<uint8_t> _perm_state(_perm_msg_len_padded);
         _aes_engine->encrypt_cbc(nullptr, _perm_state.data(), _perm_msg_len_blocks, aes_state.data());
         using bytes_view = std::basic_string_view<uint8_t>;
         using permutation_element = std::tuple<bytes_view, ElType>;
@@ -93,7 +93,6 @@ namespace riffpe
                   : i;
             auto aes_state = _aes_state_template;
             ElType x = message[j];
-            // Fixme: use some kind of f marker instead of f
             message[j] = f;
             message[_l] = j;
             // Absorb the message view (+f marker) as the rest of tweak into the AES state

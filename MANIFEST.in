@@ -1,3 +1,3 @@
-include setup_cmake.py
+include pyriffpe/extras/setup_cmake.py
 recursive-include libriffpe *.cpp *.hpp *.c *.h *.cmake CMakeLists.txt
 recursive-include pyriffpe  *.cpp *.hpp *.c *.h *.cmake CMakeLists.txt

@@ -16,11 +16,13 @@ namespace riffpe
         const uint32_t _c;
         const uint32_t _l;
         const uint32_t _chop;
-        std::vector<uint8_t> _tweak_buf;
-
+        
         uint32_t _el_size;
         uint32_t _perm_msg_len;
+        uint32_t _perm_msg_len_blocks;
         uint32_t _perm_bytes_per_value;
+        std::vector<uint8_t> _perm_state;
+        
 
         using aes_engine_type = crypto::AESEngine;
         using aes_engine_ptr  = std::unique_ptr<aes_engine_type>;

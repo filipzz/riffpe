@@ -2,7 +2,7 @@
 # set the following line to "True":
 force_fallback = False
 
-from ._common import TweakablePRNG
+from ._common import TweakablePRNG, int_to_digits, digits_to_int
 
 # Try to import native implementation, use fallback (pure Python) otherwise.
 try:
@@ -14,7 +14,6 @@ except ImportError:
     import warnings
     warnings.warn("Using fallback Riffpe implementation")
 
-    from ._fallback.Riffpe import Riffpe
-    from ._fallback.CBCTweakablePRNG import CBCTweakablePRNG
+    from ._fallback import Riffpe, CBCTweakablePRNG
 
-__all__ = ('TweakablePRNG', 'Riffpe', 'CBCTweakablePRNG')
+__all__ = ('TweakablePRNG', 'int_to_digits', 'digits_to_int', 'Riffpe', 'CBCTweakablePRNG')
