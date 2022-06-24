@@ -94,3 +94,7 @@ ptx: [78, 56, 78, 56, 34, 12, 34, 12]
 ## Testing
 
 [TBD]
+
+## Performance
+
+Benchmarks and comparison to other FPE are available [here](benchmark.md).

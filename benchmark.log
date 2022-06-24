@@ -1,0 +1,80 @@
+Dataset [16-digit base10 integers] FF3
+total encrypt time: 903677000ns (0.903677s)
+total decrypt time: 906003500ns (0.9060035s)
+average encrypt time: 90367.7ns
+average decrypt time: 90600.35ns
+Dataset [16-digit base10 integers] pyffx
+total encrypt time: 676438500ns (0.6764385s)
+total decrypt time: 698237300ns (0.6982373s)
+average encrypt time: 67643.85ns
+average decrypt time: 69823.73ns
+Dataset [16-digit base10 integers] Riffpe(10, 16) [Python]
+total encrypt time: 5497621500ns (5.4976215s)
+total decrypt time: 5602306500ns (5.6023065s)
+average encrypt time: 549762.15ns
+average decrypt time: 560230.65ns
+Dataset [16-digit base10 integers] Riffpe(100, 8) [Python]
+total encrypt time: 6812530300ns (6.8125303s)
+total decrypt time: 7155039300ns (7.1550393s)
+average encrypt time: 681253.03ns
+average decrypt time: 715503.93ns
+Dataset [16-digit base10 integers] Riffpe(10000, 4) [Python]
+total encrypt time: 470625208000ns (470.625208s)
+total decrypt time: 479492205600ns (479.4922056s)
+average encrypt time: 47062520.8ns
+average decrypt time: 47949220.56ns
+Dataset [16-digit base10 integers] Riffpe(10, 16) [native]
+total encrypt time: 126230100ns (0.1262301s)
+total decrypt time: 123366200ns (0.1233662s)
+average encrypt time: 12623.01ns
+average decrypt time: 12336.62ns
+Dataset [16-digit base10 integers] Riffpe(100, 8) [native]
+total encrypt time: 825968800ns (0.8259688s)
+total decrypt time: 805918300ns (0.8059183s)
+average encrypt time: 82596.88ns
+average decrypt time: 80591.83ns
+Dataset [16-digit base10 integers] Riffpe(10000, 4) [native]
+total encrypt time: 105753905400ns (105.7539054s)
+total decrypt time: 105631376100ns (105.6313761s)
+average encrypt time: 10575390.54ns
+average decrypt time: 10563137.61ns
+Dataset [6-digit base10 integers] FF3
+total encrypt time: 641271100ns (0.6412711s)
+total decrypt time: 649492700ns (0.6494927s)
+average encrypt time: 64127.11ns
+average decrypt time: 64949.27ns
+Dataset [6-digit base10 integers] pyffx
+total encrypt time: 541557900ns (0.5415579s)
+total decrypt time: 544810600ns (0.5448106s)
+average encrypt time: 54155.79ns
+average decrypt time: 54481.06ns
+Dataset [6-digit base10 integers] Riffpe(10, 6) [Python]
+total encrypt time: 1612675000ns (1.612675s)
+total decrypt time: 1652394800ns (1.6523948s)
+average encrypt time: 161267.5ns
+average decrypt time: 165239.48ns
+Dataset [6-digit base10 integers] Riffpe(100, 3) [Python]
+total encrypt time: 2538509400ns (2.5385094s)
+total decrypt time: 2673440400ns (2.6734404s)
+average encrypt time: 253850.94ns
+average decrypt time: 267344.04ns
+Dataset [6-digit base10 integers] Riffpe(1000, 2) [Python]
+total encrypt time: 16587026500ns (16.5870265s)
+total decrypt time: 17463141700ns (17.4631417s)
+average encrypt time: 1658702.65ns
+average decrypt time: 1746314.17ns
+Dataset [6-digit base10 integers] Riffpe(10, 6) [native]
+total encrypt time: 64459000ns (0.064459s)
+total decrypt time: 59177500ns (0.0591775s)
+average encrypt time: 6445.9ns
+average decrypt time: 5917.75ns
+Dataset [6-digit base10 integers] Riffpe(100, 3) [native]
+total encrypt time: 324128700ns (0.3241287s)
+total decrypt time: 305097400ns (0.3050974s)
+average encrypt time: 32412.87ns
+average decrypt time: 30509.74ns
+Dataset [6-digit base10 integers] Riffpe(1000, 2) [native]
+total encrypt time: 3014862500ns (3.0148625s)
+total decrypt time: 3029280700ns (3.0292807s)
+average encrypt time: 301486.25ns
+average decrypt time: 302928.07ns
