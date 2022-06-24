@@ -97,4 +97,4 @@ ptx: [78, 56, 78, 56, 34, 12, 34, 12]
 
 ## Performance
 
-Benchmarks and comparison to other FPE are available [here](benchmark.md).
+Benchmarks and comparison to other FPE are available [here](Benchmark.md).
