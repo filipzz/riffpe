@@ -22,10 +22,9 @@ class Perm:
         # then a permutation is obtained by sorting the cards
 
         msg_len = self.bytes_per_value * self.c
-        # Pre-allocate msg_len + padding zeros
-        stream = prng.get_bytes(msg_len + (-msg_len % prng.block_size))
-        cipher_value_pairs = [(stream[idx * self.bytes_per_value:(idx + 1) *
-                                      self.bytes_per_value], idx)
+        msg_len_padded = msg_len + (-msg_len % prng.block_size)
+        stream = prng.get_bytes(msg_len_padded)
+        cipher_value_pairs = [(stream[idx * self.bytes_per_value:(idx + 1) * self.bytes_per_value], idx)
                               for idx in range(self.c)]
         cipher_value_pairs.sort()
 

@@ -27,19 +27,46 @@ protected:
     aes_engine_ptr _aes_engine;
     aes_state_type _state;
 
-public:
-    CBCTweakablePRNG(const py::bytes& key, const py::bytes& tweak)
-     : _aes_engine(aes_engine_type::engine_factory())
+    void _absorb_tweak(const py::bytes& tweak)
     {
-        py::buffer_info key_info(py::buffer(key).request());
-        _aes_engine->set_key(reinterpret_cast<const uint8_t*>(key_info.ptr), key_info.shape[0]);
-        ::memset(_state.data(), 0, _state.size());
         // Absorb tweak into CBC state, effectively computing CBC-MAC
         py::buffer_info tweak_info(py::buffer(tweak).request());
         size_t tweak_len = tweak_info.shape[0];
         if((tweak_len % 16) != 0)
             throw std::length_error("Not implemented: `tweak_len` not divisible by 16");
         _aes_engine->encrypt_cbc(reinterpret_cast<const uint8_t*>(tweak_info.ptr), nullptr, tweak_len / 16, _state.data());
+    }
+
+public:
+    CBCTweakablePRNG(const py::bytes& key, const py::bytes& tweak)
+     : _aes_engine(aes_engine_type::engine_factory())
+    {
+        py::buffer_info key_info(py::buffer(key).request());
+        _aes_engine->set_key(reinterpret_cast<const uint8_t*>(key_info.ptr), key_info.shape[0]);
+        reset(tweak);
+    };
+
+    CBCTweakablePRNG(const py::bytes& key, const py::bytes& tweak, const py::bytes& iv)
+     : _aes_engine(aes_engine_type::engine_factory())
+    {
+        py::buffer_info key_info(py::buffer(key).request());
+        _aes_engine->set_key(reinterpret_cast<const uint8_t*>(key_info.ptr), key_info.shape[0]);
+        reset(tweak, iv);
+    };
+
+    void reset(const py::bytes& tweak)
+    {
+        ::memset(_state.data(), 0, _state.size());
+        _absorb_tweak(tweak);
+    };
+
+    void reset(const py::bytes& tweak, const py::bytes& iv)
+    {
+        py::buffer_info iv_info(py::buffer(iv).request());
+        if(iv_info.shape[0] != 16)
+            throw std::length_error("Invalid IV length, must be 16");
+        ::memcpy(_state.data(), iv_info.ptr, _state.size());
+        _absorb_tweak(tweak);
     };
 
     ~CBCTweakablePRNG() { if(_aes_engine) { delete _aes_engine; } }
@@ -74,6 +101,9 @@ PYBIND11_MODULE(_native, m)
 
     py::class_<CBCTweakablePRNG>(m, "CBCTweakablePRNG")
         .def(py::init<py::bytes, py::bytes>())
+        .def(py::init<py::bytes, py::bytes, py::bytes>())
+        .def("reset", py::overload_cast<const py::bytes&>(&CBCTweakablePRNG::reset))
+        .def("reset", py::overload_cast<const py::bytes&, const py::bytes&>(&CBCTweakablePRNG::reset))
         .def("get_bytes", &CBCTweakablePRNG::get_bytes)
         .def_property_readonly("block_size", &CBCTweakablePRNG::block_size)
         ;

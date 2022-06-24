@@ -32,7 +32,11 @@ class Riffpe:
                                   AES.block_size,
                                   style='pkcs7')
         self.perm_fun = Perm(self.c, self.chop)
-        #print("here we go %s %s %s" % (c, l, tweak, chop))
+        # This is a precomputed part, used later as an IV,
+        # which is equivalent to including the whole prefix
+        self.tweak_iv = AES.new(self.key, AES.MODE_CBC, iv=bytes(AES.block_size))\
+                           .encrypt(self.perm_tweak_pfx)[-AES.block_size:]
+        self.prng = CBCTweakablePRNG(self.key, b'', iv=self.tweak_iv)
 
     def perm(self, x: int, tweak: bytes, inv: int):
         """
@@ -42,8 +46,9 @@ class Riffpe:
         :param inv: if equal to 0 then the permutation is evaluated if 1 then its inverse
         :return:
         """
-        prng = CBCTweakablePRNG(self.key, self.perm_tweak_pfx + tweak)
-        return self.perm_fun.perm(prng, x, inv)
+        # prng = CBCTweakablePRNG(self.key, tweak, iv=self.tweak_iv)
+        self.prng.reset(tweak, iv=self.tweak_iv)
+        return self.perm_fun.perm(self.prng, x, inv)
 
     def round(self, f, m):
         """
