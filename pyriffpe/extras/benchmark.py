@@ -87,8 +87,23 @@ def benchmark_riffpe(dataset, n, l, label, native=False):
     descr = f"Riffpe({n}, {l}) {'[native]' if native else '[Python]'}"
     _benchmark_common(dataset, label, descr,
                       (lambda entry: riffpe.int_to_digits(entry, l, n)),
-                      fpe.enc, fpe.dec)
-    
+                      fpe.encrypt, fpe.decrypt)
+
+
+def benchmark_riffpex(dataset, ns, label, native=False):
+    if native and not have_native:
+        print("--- native benchmark skipped ---")
+        return
+    if native:
+        fpe = riffpe._native.RiffpeX(ns, BENCHMARK_KEY, BENCHMARK_TAG)
+    else:
+        fpe = riffpe._fallback.RiffpeX(ns, BENCHMARK_KEY, BENCHMARK_TAG)
+
+    descr = f"RiffpeX{tuple(ns)!r} {'[native]' if native else '[Python]'}"
+    _benchmark_common(dataset, label, descr,
+                      (lambda entry: riffpe.int_to_bases(entry, ns)),
+                      fpe.encrypt, fpe.decrypt)
+
 
 def benchmark_ff3(dataset, ndigits, label):
     if not have_ff3:
@@ -184,3 +199,38 @@ benchmark_go_ff3(BENCHMARK_DATASET_2, 6, "[6-digit base10 integers]")
 benchmark_riffpe(BENCHMARK_DATASET_2, 10,   6, "[6-digit base10 integers]", True)
 benchmark_riffpe(BENCHMARK_DATASET_2, 100,  3, "[6-digit base10 integers]", True)
 benchmark_riffpe(BENCHMARK_DATASET_2, 1000, 2, "[6-digit base10 integers]", True)
+
+
+# Benchmark dataset 3: inner 9 credit card digits [9-digit base10 integers]
+# Riffpe configurations under test:
+#  * n=10, l=9 (potentially insecure)
+#  * n=1000, l=3
+# RiffpeX configurations under test:
+#  * (100, 100, 100, 1000)
+#  * (50, 50, 40, 100, 100)
+#  * (50, 50, 50, 80, 100)
+
+BENCHMARK_DATASET_3_LENGTH = 10_000
+
+BENCHMARK_DATASET_3 = [
+    random.randrange(1000_000_000)
+    for _ in range(BENCHMARK_DATASET_3_LENGTH)
+]
+
+
+benchmark_pyffx(BENCHMARK_DATASET_3, 9, "[9-digit base10 integers]")
+benchmark_ff3(BENCHMARK_DATASET_3, 9, "[9-digit base10 integers]")
+benchmark_riffpe(BENCHMARK_DATASET_3, 10,   9, "[9-digit base10 integers]", False)
+benchmark_riffpe(BENCHMARK_DATASET_3, 1000, 3, "[9-digit base10 integers]", False)
+benchmark_riffpex(BENCHMARK_DATASET_3, (100, 100, 100, 1000),  "[9-digit base10 integers]", False)
+benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 40, 100, 100), "[9-digit base10 integers]", False)
+benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 50, 80, 100),  "[9-digit base10 integers]", False)
+benchmark_riffpex(BENCHMARK_DATASET_3, (25, 25, 25, 25, 40, 64),  "[9-digit base10 integers]", False)
+benchmark_go_ff1(BENCHMARK_DATASET_3, 6, "[9-digit base10 integers]")
+benchmark_go_ff3(BENCHMARK_DATASET_3, 6, "[9-digit base10 integers]")
+benchmark_riffpe(BENCHMARK_DATASET_3, 10,   9, "[9-digit base10 integers]", True)
+benchmark_riffpe(BENCHMARK_DATASET_3, 1000, 3, "[9-digit base10 integers]", True)
+benchmark_riffpex(BENCHMARK_DATASET_3, (100, 100, 100, 1000),  "[9-digit base10 integers]", True)
+benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 40, 100, 100), "[9-digit base10 integers]", True)
+benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 50, 80, 100),  "[9-digit base10 integers]", True)
+benchmark_riffpex(BENCHMARK_DATASET_3, (25, 25, 25, 25, 40, 64),  "[9-digit base10 integers]", True)
