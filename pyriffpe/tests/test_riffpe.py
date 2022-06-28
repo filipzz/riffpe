@@ -35,12 +35,12 @@ KAT_ENTRIES = [
 @pytest.mark.parametrize('kat_entry', KAT_ENTRIES)
 def test_encrypt_kat(kat_entry: KATEntry):
     fpe = Riffpe(kat_entry.c, kat_entry.l, kat_entry.key, kat_entry.tag, kat_entry.chops)
-    ctx = fpe.enc(kat_entry.plaintext)
+    ctx = fpe.encrypt(kat_entry.plaintext)
     assert ctx == kat_entry.ciphertext
 
 
 @pytest.mark.parametrize('kat_entry', KAT_ENTRIES)
 def test_decrypt_kat(kat_entry: KATEntry):
     fpe = Riffpe(kat_entry.c, kat_entry.l, kat_entry.key, kat_entry.tag, kat_entry.chops)
-    ctx = fpe.enc(kat_entry.plaintext)
-    assert ctx == kat_entry.ciphertext
+    ptx = fpe.decrypt(kat_entry.ciphertext)
+    assert ptx == kat_entry.plaintext

@@ -78,10 +78,10 @@ fpe = Riffpe(100, 8, bytes.fromhex("00112233445566778899aabbccddeeff"), b'')
 
 ptx = [78, 56, 78, 56, 34, 12, 34, 12]
 
-ctx = fpe.enc(ptx)
+ctx = fpe.encrypt(ptx)
 print("ctx:", ctx)
 
-ptx = fpe.dec(ctx)
+ptx = fpe.decrypt(ctx)
 print("ptx:", ptx)
 ```
 
@@ -97,4 +97,4 @@ ptx: [78, 56, 78, 56, 34, 12, 34, 12]
 
 ## Performance
 
-Benchmarks and comparison to other FPE are available [here](Benchmark.md).
+Benchmarks and comparison to other FPEs are available [here](Benchmark.md).

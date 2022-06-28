@@ -1,4 +1,5 @@
 #include "AESEngineGeneric.hpp"
+#include "mem_utils.hpp" // load_u32_le , store_u32_le, extract_byte
 
 #include <exception>
 #include <sstream>
@@ -77,14 +78,6 @@ namespace riffpe
             constexpr std::array<uint32_t, 256> FTab3 = mkftab<3>();
             constexpr std::array<uint32_t, 10> RCons = { 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36 };
 
-            static constexpr inline uint32_t _load_u32_le(const uint8_t* ptr)
-            {
-                return (uint32_t)(ptr[0])
-                    |  (uint32_t)(ptr[1]) << 8
-                    |  (uint32_t)(ptr[2]) << 16
-                    |  (uint32_t)(ptr[3]) << 24;
-            }
-
             static constexpr inline uint32_t _make_word(uint8_t a, uint8_t b, uint8_t c, uint8_t d)
             {
                 return (uint32_t)(a)
@@ -93,19 +86,7 @@ namespace riffpe
                     |  (uint32_t)(d) << 24;
             }
 
-            template<int Byte>
-            static constexpr inline uint8_t _extract_byte(uint32_t value)
-            {
-                return (value >> (Byte * 8)) & 0xFF;
-            }
-
-            static constexpr inline void _store_u32_le(uint8_t* ptr, uint32_t value)
-            {
-                ptr[0] = _extract_byte<0>(value);
-                ptr[1] = _extract_byte<1>(value);
-                ptr[2] = _extract_byte<2>(value);
-                ptr[3] = _extract_byte<3>(value);
-            }
+            using namespace util;
         }
 
         void AESEngineGeneric::set_key(const uint8_t *key, size_t size)
@@ -116,17 +97,17 @@ namespace riffpe
                 {
                     // Load 128-bit key
                     _round_count = 10;
-                    _key[0][0] = _load_u32_le(key);
-                    _key[0][1] = _load_u32_le(key+4);
-                    _key[0][2] = _load_u32_le(key+8);
-                    _key[0][3] = _load_u32_le(key+12);
+                    _key[0][0] = load_u32_le(key);
+                    _key[0][1] = load_u32_le(key+4);
+                    _key[0][2] = load_u32_le(key+8);
+                    _key[0][3] = load_u32_le(key+12);
                     for(int i=0; i<10; i++)
                     {
                         _key[i+1][0] = _key[i][0] ^ RCons[i] ^ _make_word(
-                            FSBox[_extract_byte<1>(_key[i][3])],
-                            FSBox[_extract_byte<2>(_key[i][3])],
-                            FSBox[_extract_byte<3>(_key[i][3])],
-                            FSBox[_extract_byte<0>(_key[i][3])]
+                            FSBox[extract_byte<1>(_key[i][3])],
+                            FSBox[extract_byte<2>(_key[i][3])],
+                            FSBox[extract_byte<3>(_key[i][3])],
+                            FSBox[extract_byte<0>(_key[i][3])]
                         );
                         _key[i+1][1] = _key[i][1] ^ _key[i+1][0];
                         _key[i+1][2] = _key[i][2] ^ _key[i+1][1];
@@ -138,20 +119,20 @@ namespace riffpe
                 {
                     // Load 192-bit key
                     _round_count = 12;
-                    _key[0][0] = _load_u32_le(key);
-                    _key[0][1] = _load_u32_le(key+4);
-                    _key[0][2] = _load_u32_le(key+8);
-                    _key[0][3] = _load_u32_le(key+12);
-                    _key[1][0] = _load_u32_le(key+16);
-                    _key[1][1] = _load_u32_le(key+20);
+                    _key[0][0] = load_u32_le(key);
+                    _key[0][1] = load_u32_le(key+4);
+                    _key[0][2] = load_u32_le(key+8);
+                    _key[0][3] = load_u32_le(key+12);
+                    _key[1][0] = load_u32_le(key+16);
+                    _key[1][1] = load_u32_le(key+20);
                     int i=0, r=1;
                     for(;;)
                     {
                         _key[r][2] = _key[r-1][0] ^ RCons[i++] ^ _make_word(
-                            FSBox[_extract_byte<1>(_key[r][1])],
-                            FSBox[_extract_byte<2>(_key[r][1])],
-                            FSBox[_extract_byte<3>(_key[r][1])],
-                            FSBox[_extract_byte<0>(_key[r][1])]
+                            FSBox[extract_byte<1>(_key[r][1])],
+                            FSBox[extract_byte<2>(_key[r][1])],
+                            FSBox[extract_byte<3>(_key[r][1])],
+                            FSBox[extract_byte<0>(_key[r][1])]
                         );
                         _key[r][3] = _key[r-1][1] ^ _key[r][2];
 
@@ -163,10 +144,10 @@ namespace riffpe
 
                         r++; // r = 0 mod 3
                         _key[r][0] = _key[r-2][2] ^ RCons[i++] ^ _make_word(
-                            FSBox[_extract_byte<1>(_key[r-1][3])],
-                            FSBox[_extract_byte<2>(_key[r-1][3])],
-                            FSBox[_extract_byte<3>(_key[r-1][3])],
-                            FSBox[_extract_byte<0>(_key[r-1][3])]
+                            FSBox[extract_byte<1>(_key[r-1][3])],
+                            FSBox[extract_byte<2>(_key[r-1][3])],
+                            FSBox[extract_byte<3>(_key[r-1][3])],
+                            FSBox[extract_byte<0>(_key[r-1][3])]
                         );
                         _key[r][1] = _key[r-2][3] ^ _key[r][0];
                         _key[r][2] = _key[r-1][0] ^ _key[r][1];
@@ -186,22 +167,22 @@ namespace riffpe
                 {
                     // Load 256-bit key
                     _round_count = 14;
-                    _key[0][0] = _load_u32_le(key);
-                    _key[0][1] = _load_u32_le(key+4);
-                    _key[0][2] = _load_u32_le(key+8);
-                    _key[0][3] = _load_u32_le(key+12);
-                    _key[1][0] = _load_u32_le(key+16);
-                    _key[1][1] = _load_u32_le(key+20);
-                    _key[1][2] = _load_u32_le(key+24);
-                    _key[1][3] = _load_u32_le(key+28);
+                    _key[0][0] = load_u32_le(key);
+                    _key[0][1] = load_u32_le(key+4);
+                    _key[0][2] = load_u32_le(key+8);
+                    _key[0][3] = load_u32_le(key+12);
+                    _key[1][0] = load_u32_le(key+16);
+                    _key[1][1] = load_u32_le(key+20);
+                    _key[1][2] = load_u32_le(key+24);
+                    _key[1][3] = load_u32_le(key+28);
                     int i=0, r=2;
                     for(;;)
                     {
                         _key[r][0] = _key[r-2][0] ^ RCons[i++] ^ _make_word(
-                            FSBox[_extract_byte<1>(_key[r-1][3])],
-                            FSBox[_extract_byte<2>(_key[r-1][3])],
-                            FSBox[_extract_byte<3>(_key[r-1][3])],
-                            FSBox[_extract_byte<0>(_key[r-1][3])]
+                            FSBox[extract_byte<1>(_key[r-1][3])],
+                            FSBox[extract_byte<2>(_key[r-1][3])],
+                            FSBox[extract_byte<3>(_key[r-1][3])],
+                            FSBox[extract_byte<0>(_key[r-1][3])]
                         );
                         _key[r][1] = _key[r-2][1] ^ _key[r][0];
                         _key[r][2] = _key[r-2][2] ^ _key[r][1];
@@ -213,10 +194,10 @@ namespace riffpe
 
                         r++; // r = 1 mod 2
                         _key[r][0] = _key[r-2][0] ^ _make_word(
-                            FSBox[_extract_byte<0>(_key[r-1][3])],
-                            FSBox[_extract_byte<1>(_key[r-1][3])],
-                            FSBox[_extract_byte<2>(_key[r-1][3])],
-                            FSBox[_extract_byte<3>(_key[r-1][3])]
+                            FSBox[extract_byte<0>(_key[r-1][3])],
+                            FSBox[extract_byte<1>(_key[r-1][3])],
+                            FSBox[extract_byte<2>(_key[r-1][3])],
+                            FSBox[extract_byte<3>(_key[r-1][3])]
                         );
                         _key[r][1] = _key[r-2][1] ^ _key[r][0];
                         _key[r][2] = _key[r-2][2] ^ _key[r][1];
@@ -242,25 +223,25 @@ namespace riffpe
             const std::array<uint32_t, 4>& rkey)
         {
             astate[0] = rkey[0]
-                      ^ FTab0[_extract_byte<0>(bstate[0])]
-                      ^ FTab1[_extract_byte<1>(bstate[1])]
-                      ^ FTab2[_extract_byte<2>(bstate[2])]
-                      ^ FTab3[_extract_byte<3>(bstate[3])];
+                      ^ FTab0[extract_byte<0>(bstate[0])]
+                      ^ FTab1[extract_byte<1>(bstate[1])]
+                      ^ FTab2[extract_byte<2>(bstate[2])]
+                      ^ FTab3[extract_byte<3>(bstate[3])];
             astate[1] = rkey[1]
-                      ^ FTab0[_extract_byte<0>(bstate[1])]
-                      ^ FTab1[_extract_byte<1>(bstate[2])]
-                      ^ FTab2[_extract_byte<2>(bstate[3])]
-                      ^ FTab3[_extract_byte<3>(bstate[0])];
+                      ^ FTab0[extract_byte<0>(bstate[1])]
+                      ^ FTab1[extract_byte<1>(bstate[2])]
+                      ^ FTab2[extract_byte<2>(bstate[3])]
+                      ^ FTab3[extract_byte<3>(bstate[0])];
             astate[2] = rkey[2]
-                      ^ FTab0[_extract_byte<0>(bstate[2])]
-                      ^ FTab1[_extract_byte<1>(bstate[3])]
-                      ^ FTab2[_extract_byte<2>(bstate[0])]
-                      ^ FTab3[_extract_byte<3>(bstate[1])];
+                      ^ FTab0[extract_byte<0>(bstate[2])]
+                      ^ FTab1[extract_byte<1>(bstate[3])]
+                      ^ FTab2[extract_byte<2>(bstate[0])]
+                      ^ FTab3[extract_byte<3>(bstate[1])];
             astate[3] = rkey[3]
-                      ^ FTab0[_extract_byte<0>(bstate[3])]
-                      ^ FTab1[_extract_byte<1>(bstate[0])]
-                      ^ FTab2[_extract_byte<2>(bstate[1])]
-                      ^ FTab3[_extract_byte<3>(bstate[2])];
+                      ^ FTab0[extract_byte<0>(bstate[3])]
+                      ^ FTab1[extract_byte<1>(bstate[0])]
+                      ^ FTab2[extract_byte<2>(bstate[1])]
+                      ^ FTab3[extract_byte<3>(bstate[2])];
         }
 
         inline static void do_aes_enc_transform(
@@ -281,28 +262,28 @@ namespace riffpe
             }
             do_fwd_round(tstate, state, key[i+1]);
             state[0] = key[i+2][0] ^ _make_word(
-                FSBox[_extract_byte<0>(tstate[0])],
-                FSBox[_extract_byte<1>(tstate[1])],
-                FSBox[_extract_byte<2>(tstate[2])],
-                FSBox[_extract_byte<3>(tstate[3])]
+                FSBox[extract_byte<0>(tstate[0])],
+                FSBox[extract_byte<1>(tstate[1])],
+                FSBox[extract_byte<2>(tstate[2])],
+                FSBox[extract_byte<3>(tstate[3])]
             );
             state[1] = key[i+2][1] ^ _make_word(
-                FSBox[_extract_byte<0>(tstate[1])],
-                FSBox[_extract_byte<1>(tstate[2])],
-                FSBox[_extract_byte<2>(tstate[3])],
-                FSBox[_extract_byte<3>(tstate[0])]
+                FSBox[extract_byte<0>(tstate[1])],
+                FSBox[extract_byte<1>(tstate[2])],
+                FSBox[extract_byte<2>(tstate[3])],
+                FSBox[extract_byte<3>(tstate[0])]
             );
             state[2] = key[i+2][2] ^ _make_word(
-                FSBox[_extract_byte<0>(tstate[2])],
-                FSBox[_extract_byte<1>(tstate[3])],
-                FSBox[_extract_byte<2>(tstate[0])],
-                FSBox[_extract_byte<3>(tstate[1])]
+                FSBox[extract_byte<0>(tstate[2])],
+                FSBox[extract_byte<1>(tstate[3])],
+                FSBox[extract_byte<2>(tstate[0])],
+                FSBox[extract_byte<3>(tstate[1])]
             );
             state[3] = key[i+2][3] ^ _make_word(
-                FSBox[_extract_byte<0>(tstate[3])],
-                FSBox[_extract_byte<1>(tstate[0])],
-                FSBox[_extract_byte<2>(tstate[1])],
-                FSBox[_extract_byte<3>(tstate[2])]
+                FSBox[extract_byte<0>(tstate[3])],
+                FSBox[extract_byte<1>(tstate[0])],
+                FSBox[extract_byte<2>(tstate[1])],
+                FSBox[extract_byte<3>(tstate[2])]
             );
         }
 
@@ -326,16 +307,16 @@ namespace riffpe
 
             for(int i=0; i<block_count; ++i)
             {
-                aes_state[0] ^= _load_u32_le(in);
-                aes_state[1] ^= _load_u32_le(in+4);
-                aes_state[2] ^= _load_u32_le(in+8);
-                aes_state[3] ^= _load_u32_le(in+12);
+                aes_state[0] ^= load_u32_le(in);
+                aes_state[1] ^= load_u32_le(in+4);
+                aes_state[2] ^= load_u32_le(in+8);
+                aes_state[3] ^= load_u32_le(in+12);
                 in += 16;
                 do_aes_enc_transform(aes_state, _key, _round_count);
-                _store_u32_le(out,    aes_state[0]);
-                _store_u32_le(out+4,  aes_state[1]);
-                _store_u32_le(out+8,  aes_state[2]);
-                _store_u32_le(out+12, aes_state[3]);
+                store_u32_le(out,    aes_state[0]);
+                store_u32_le(out+4,  aes_state[1]);
+                store_u32_le(out+8,  aes_state[2]);
+                store_u32_le(out+12, aes_state[3]);
                 out += 16;
             }
         }
@@ -353,36 +334,36 @@ namespace riffpe
             }
             
             std::array<uint32_t, 4> cbc_state;
-            cbc_state[0] = _load_u32_le(state);
-            cbc_state[1] = _load_u32_le(state+4);
-            cbc_state[2] = _load_u32_le(state+8);
-            cbc_state[3] = _load_u32_le(state+12);
+            cbc_state[0] = load_u32_le(state);
+            cbc_state[1] = load_u32_le(state+4);
+            cbc_state[2] = load_u32_le(state+8);
+            cbc_state[3] = load_u32_le(state+12);
 
             for(int i=0; i<block_count; ++i)
             {
                 if(in)
                 {
-                    cbc_state[0] ^= _load_u32_le(in);
-                    cbc_state[1] ^= _load_u32_le(in+4);
-                    cbc_state[2] ^= _load_u32_le(in+8);
-                    cbc_state[3] ^= _load_u32_le(in+12);
+                    cbc_state[0] ^= load_u32_le(in);
+                    cbc_state[1] ^= load_u32_le(in+4);
+                    cbc_state[2] ^= load_u32_le(in+8);
+                    cbc_state[3] ^= load_u32_le(in+12);
                     in += 16;
                 }
                 do_aes_enc_transform(cbc_state, _key, _round_count);
                 if(out)
                 {
-                    _store_u32_le(out,    cbc_state[0]);
-                    _store_u32_le(out+4,  cbc_state[1]);
-                    _store_u32_le(out+8,  cbc_state[2]);
-                    _store_u32_le(out+12, cbc_state[3]);
+                    store_u32_le(out,    cbc_state[0]);
+                    store_u32_le(out+4,  cbc_state[1]);
+                    store_u32_le(out+8,  cbc_state[2]);
+                    store_u32_le(out+12, cbc_state[3]);
                     out += 16;
                 }
             }
             
-            _store_u32_le(state,    cbc_state[0]);
-            _store_u32_le(state+4,  cbc_state[1]);
-            _store_u32_le(state+8,  cbc_state[2]);
-            _store_u32_le(state+12, cbc_state[3]);
+            store_u32_le(state,    cbc_state[0]);
+            store_u32_le(state+4,  cbc_state[1]);
+            store_u32_le(state+8,  cbc_state[2]);
+            store_u32_le(state+12, cbc_state[3]);
         }
     }
 }

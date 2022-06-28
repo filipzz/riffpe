@@ -1,4 +1,5 @@
 #include <riffpe/Riffpe.hpp>
+#include <riffpe/RiffpeX.hpp>
 #include <riffpe/AESEngine.hpp>
 
 #include <pybind11/pybind11.h>
@@ -14,6 +15,7 @@
 
 namespace py = pybind11;
 using riffpe::Riffpe;
+using riffpe::RiffpeX;
 using riffpe::crypto::AESEngine;
 
 
@@ -95,6 +97,18 @@ Riffpe make_riffpe_py(uint32_t c, uint32_t l, py::bytes key, py::bytes tweak, ui
     return Riffpe(c, l, reinterpret_cast<const uint8_t*>(key_info.ptr), key_len, reinterpret_cast<const uint8_t*>(tweak_info.ptr), tweak_len, chop);
 }
 
+
+RiffpeX make_riffpex_py(std::vector<uint32_t> cs, py::bytes key, py::bytes tweak, uint32_t chop)
+{
+    py::buffer_info key_info(py::buffer(key).request());
+    size_t key_len = key_info.shape[0];
+
+    py::buffer_info tweak_info(py::buffer(tweak).request());
+    size_t tweak_len = tweak_info.shape[0];
+
+    return RiffpeX(cs.data(), cs.data() + cs.size(), reinterpret_cast<const uint8_t*>(key_info.ptr), key_len, reinterpret_cast<const uint8_t*>(tweak_info.ptr), tweak_len, chop);
+}
+
 PYBIND11_MODULE(_native, m)
 {
     m.doc() = "Native Riffpe tools";
@@ -111,8 +125,16 @@ PYBIND11_MODULE(_native, m)
     py::class_<Riffpe>(m, "Riffpe")
         .def(py::init<>(&make_riffpe_py), 
              py::arg("c"), py::arg("l"), py::arg("key"), py::arg("tweak"), py::arg("chop") = 1)
-        .def("enc", &Riffpe::enc)
-        .def("dec", &Riffpe::dec)
+        .def("encrypt", &Riffpe::encrypt)
+        .def("decrypt", &Riffpe::decrypt)
         .def("_aes_engine_id", &Riffpe::aes_engine_id)
+        ;
+    
+    py::class_<RiffpeX>(m, "RiffpeX")
+        .def(py::init<>(&make_riffpex_py), 
+             py::arg("cs"), py::arg("key"), py::arg("tweak"), py::arg("chop") = 1)
+        .def("encrypt", &RiffpeX::encrypt)
+        .def("decrypt", &RiffpeX::decrypt)
+        .def("_aes_engine_id", &RiffpeX::aes_engine_id)
         ;
 }

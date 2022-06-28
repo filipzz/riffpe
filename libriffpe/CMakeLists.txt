@@ -6,6 +6,7 @@ option(RIFFPE_DISABLE_ACCELERATION "Force generic AES implementation instead of 
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
 
 
 project(libriffpe CXX)
@@ -21,6 +22,7 @@ add_library(riffpe
             src/AESEngineGeneric.cpp
             $<$<BOOL:${RIFFPE_CXX_EXT_AESNI_AVAILABLE}>:src/AESEngineAESNI.cpp>
             src/Riffpe.cpp
+            src/RiffpeX.cpp
             )
 
 target_include_directories(riffpe PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

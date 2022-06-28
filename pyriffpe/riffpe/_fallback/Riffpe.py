@@ -9,6 +9,30 @@ from .CBCTweakablePRNG import CBCTweakablePRNG
 
 class Riffpe:
 
+    @classmethod
+    def _get_kdf_params(cls, c: int):
+        kdf_order = '<'
+        if c < 256:
+            kdf_bytes = 1
+            kdf_el_struct = struct.Struct('B')
+        elif c < 65536:
+            kdf_bytes = 2
+            kdf_el_struct = struct.Struct('H')
+        elif c < 4294967296:
+            kdf_bytes = 4
+            kdf_el_struct = struct.Struct('I')
+        else:
+            raise ValueError(f"Radix {c} too big (must be < 32 bits)")
+        assert kdf_el_struct.size == kdf_bytes
+        return (kdf_order, kdf_bytes, kdf_el_struct)
+    
+    def _kdf_init(self, c: int):
+        self._kdf_params = self._get_kdf_params(c)
+        self._kdf_struct = self._kdf_params[2]
+        self._kdf_bytes = self._kdf_params[1]
+
+        self._kdf_el_to_bytes = self._kdf_struct.pack
+
     def __init__(self, c: int, l: int, key: bytes(16), tweak: bytes, chop=1):
         self.c = c
         self.l = l
@@ -16,15 +40,7 @@ class Riffpe:
         self.tweak = tweak
         self.chop = chop
 
-        self.kdf_order = 'little'
-        if c < 256:
-            self.kdf_bytes = 1
-        elif c < 65536:
-            self.kdf_bytes = 2
-        elif c < 4294967296:
-            self.kdf_bytes = 4
-        else:
-            raise ValueError(f"Radix {c} too big (must be < 32 bits)")
+        self._kdf_init(c)
 
         self.perm_tweak_pfx = struct.pack(f'<IcIc{len(self.tweak)}s', self.c,
                                           b'_', self.l, b'^', self.tweak)
@@ -46,24 +62,68 @@ class Riffpe:
         :param inv: if equal to 0 then the permutation is evaluated if 1 then its inverse
         :return:
         """
-        # prng = CBCTweakablePRNG(self.key, tweak, iv=self.tweak_iv)
         self.prng.reset(tweak, iv=self.tweak_iv)
         return self.perm_fun.perm(self.prng, x, inv)
 
-    def round(self, f, m):
+    def round(self, f, m, inverse=False):
         """
         Computes a single round of Riffpe
-        :param tag:
         :param f: Phase id: 0 - absorbing phase, 1 - squeezing phase
         :param m: message to be transformed
+        :param inverse: select whether to run forward or reverse operation
         :return:
         """
-        for i, x in enumerate(m):
-            tweak = self.tweak_derivation(m[:i], m[i + 1:], f, i)
-            y = self.perm(x, tweak, False)
-            m[i] = y
+        tdstate = self._td_state_init(m)
+        i_range = range(self.l - 1, -1, -1) if inverse else range(self.l)
+        for i in i_range:
+            tweak = self._td_state_update(tdstate, m, i, f, inverse)
+            m[i] = self.perm(m[i], tweak, inverse)
 
-    def enc(self, x):
+    def _td_state_init(self, m):
+        # Buffer is: self.l elements of self._kdf_bytes, which includes a round marker at ith position
+        # +1 element of kdf_bytes for 'i' after the array.
+        tweak_len = (self.l + 1) * self._kdf_bytes
+        tweak_buf = bytearray(tweak_len + (-tweak_len) % 16)
+        idx = 0
+        for x in m:
+            self._kdf_struct.pack_into(tweak_buf, idx, x)
+            idx += self._kdf_bytes
+        return tweak_buf
+    
+    def _td_set_element(self, tweak_buf, i, el):
+        self._kdf_struct.pack_into(tweak_buf, i * self._kdf_bytes, el)
+    
+    def _td_state_update(self, state, m, i, f, inverse):
+        """
+        :param state: tweak derivation state as returned by _td_state_init
+        :param m: message buffer state
+        :param i: index of currently processed element
+        :param f: round index (0 or 1)
+        :param inverse: whether it's an inverse round (determines which element in state needs updating)
+        """
+        tweak_buf = state
+        l = self.l
+        if not inverse:
+            # forward round and element > 0 -> previous element needs updating
+            if i != 0:
+                self._td_set_element(tweak_buf, (i-1), m[i-1])
+            # forward round and element 0 in round 1 -> last element of round 0 needs updating
+            elif f == 1:
+                self._td_set_element(tweak_buf, (l-1), m[-1])
+        else:
+            # inverse round and element < l-1 -> previous element needs updating
+            if i != l-1:
+                self._td_set_element(tweak_buf, (i+1), m[i+1])
+            # inverse round and element l-1 in round 0 -> first element of round 1 needs updating
+            elif f == 0:
+                self._td_set_element(tweak_buf, 0, m[0])
+        # Current index needs to be set to f
+        self._td_set_element(tweak_buf, i, f)
+        # Last element needs to be set to i
+        self._td_set_element(tweak_buf, l, i)
+        return tweak_buf
+
+    def encrypt(self, x):
         """
         Encrypts x by calling twice the round function
         :param x: input message
@@ -79,20 +139,7 @@ class Riffpe:
 
         return x
 
-    def round_inv(self, f, m):
-        """
-        Computes the inverse of the round function
-        :param f: phase number: 0 - absoribing phase, 1 - squeezing phase
-        :param m: message to be parsed
-        :return:
-        """
-        for i in range(self.l - 1, -1, -1):
-            x = m[i]
-            tweak = self.tweak_derivation(m[:i], m[i + 1:], f, i)
-            y = self.perm(x, tweak, True)
-            m[i] = y
-
-    def dec(self, x):
+    def decrypt(self, x):
         """
         Decrypts z for given tag
         :param tag:
@@ -103,39 +150,11 @@ class Riffpe:
         assert len(x) == self.l
 
         # inverting squeezing phase
-        self.round_inv(1, x)
+        self.round(1, x, True)
         # inverting absorbing phase
-        self.round_inv(0, x)
+        self.round(0, x, True)
 
         return x
-
-    def _kdf_el_to_bytes(self, el):
-        return el.to_bytes(self.kdf_bytes, self.kdf_order)
-
-    def tweak_derivation(self, x_left, x_right, f, i):
-        """
-        Derives encryption key for given input parameters
-        :param x_left:
-        :param x_right:
-        :param f:
-        :return:
-        """
-        tweak_len = (self.l + 1) * self.kdf_bytes
-        tweak_buf = bytearray(tweak_len + (-tweak_len) % 16)
-        idx = 0
-        for x in x_left:
-            tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(x)
-            idx += self.kdf_bytes
-        # The place with f can serve as a neat separator between left and right sides;
-        # to avoid "looking like" regular element, another marking could be used, e.g. A5 for f=0 amd 5A for f=1
-        tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(f)
-        idx += self.kdf_bytes
-        for x in x_right:
-            tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(x)
-            idx += self.kdf_bytes
-        tweak_buf[idx:idx + self.kdf_bytes] = self._kdf_el_to_bytes(i)
-
-        return tweak_buf
 
     def _aes_engine_id(self):
         import Crypto

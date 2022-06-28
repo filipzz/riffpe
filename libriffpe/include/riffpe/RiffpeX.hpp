@@ -18,15 +18,15 @@ namespace riffpe
         void enc_dec_impl(std::vector<uint32_t>& message, RiffpeClass* pthis);
     }
 
-    class Riffpe
+    class RiffpeX
     {
     protected:
-        const uint32_t _c;
+        const std::vector<uint32_t> _cs;
         const uint32_t _l;
         const uint32_t _chop;
         
-        uint32_t _el_size;
-        std::unique_ptr<RifflePermBase> _perm;
+        uint32_t _el_size;        
+        std::vector<std::unique_ptr<RifflePermBase>> _perms;
 
         using aes_engine_type = crypto::AESEngine;
         using aes_engine_ptr  = std::unique_ptr<aes_engine_type>;
@@ -39,9 +39,9 @@ namespace riffpe
         void enc_dec_impl(std::vector<uint32_t>& message);
 
     public:
-        Riffpe(uint32_t c, uint32_t l, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t chop = 1);
-        Riffpe(Riffpe&&);
-        ~Riffpe();
+        RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t chop = 1);
+        RiffpeX(RiffpeX&&);
+        ~RiffpeX();
 
         template<typename ElType, bool Inverse>
         void round(uint32_t f, ElType* message);
@@ -54,9 +54,9 @@ namespace riffpe
                 throw std::length_error("Invalid message length");
             switch(_el_size)
             {
-                case sizeof(uint8_t):  detail::enc_dec_impl<uint8_t,  false, Riffpe>(message, this); break;
-                case sizeof(uint16_t): detail::enc_dec_impl<uint16_t, false, Riffpe>(message, this); break;
-                case sizeof(uint32_t): detail::enc_dec_impl<uint32_t, false, Riffpe>(message, this); break;
+                case sizeof(uint8_t):  detail::enc_dec_impl<uint8_t,  false, RiffpeX>(message, this); break;
+                case sizeof(uint16_t): detail::enc_dec_impl<uint16_t, false, RiffpeX>(message, this); break;
+                case sizeof(uint32_t): detail::enc_dec_impl<uint32_t, false, RiffpeX>(message, this); break;
                 default: throw std::runtime_error{"Invalid state (invalid element size)"};
             }            
             return message;
@@ -68,9 +68,9 @@ namespace riffpe
                 throw std::length_error("Invalid message length");
             switch(_el_size)
             {
-                case sizeof(uint8_t):  detail::enc_dec_impl<uint8_t,  true, Riffpe>(message, this); break;
-                case sizeof(uint16_t): detail::enc_dec_impl<uint16_t, true, Riffpe>(message, this); break;
-                case sizeof(uint32_t): detail::enc_dec_impl<uint32_t, true, Riffpe>(message, this); break;
+                case sizeof(uint8_t):  detail::enc_dec_impl<uint8_t,  true, RiffpeX>(message, this); break;
+                case sizeof(uint16_t): detail::enc_dec_impl<uint16_t, true, RiffpeX>(message, this); break;
+                case sizeof(uint32_t): detail::enc_dec_impl<uint32_t, true, RiffpeX>(message, this); break;
                 default: throw std::runtime_error{"Invalid state (invalid element size)"};
             }            
             return message;
