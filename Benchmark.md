@@ -2,6 +2,32 @@
 
 Based on [pyriffpe/extras/benchmark.py](pyriffpe/extras/benchmark.py).
 
+To get the full benchmark experience, the following extras are needed:
+
+* Python FF3 implementation (package `ff3`)
+* Python pyffx implementation (package `pyffx`)
+* Go >= 1.15
+
+For benchmark and development, a Python virtual environment is recommended.
+On Ubuntu (latest version tested is 20.04.x) the following steps can be executed
+to reproduce our benchmark environment.
+
+```
+$ sudo add-apt-repository ppa:longsleep/golang-backports
+$ sudo apt install python3-venv golang
+$ python3 -m venv venv
+$ source venv/bin/activate
+(venv) $ pip install pyffx ff3 tqdm pybindgen
+(venv) $ pip install -e .
+(venv) $ python pyriffpe/extras/make_fpe_bindings.py
+```
+
+Running a benchmark should be as easy as
+```
+(venv) $ python pyriffpe/extras/benchmark.py > benchmark.log
+```
+
+
 ## Test platform 1
 ```
 CPU: Intel(R) Core(TM) i7-6700K CPU @ 4.00GHz

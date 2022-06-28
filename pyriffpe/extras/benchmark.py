@@ -1,6 +1,9 @@
+import math
 import random
 import sys
 import time
+
+from typing import List
 
 import riffpe
 import riffpe._fallback
@@ -90,16 +93,18 @@ def benchmark_riffpe(dataset, n, l, label, native=False):
                       fpe.encrypt, fpe.decrypt)
 
 
-def benchmark_riffpex(dataset, ns, label, native=False):
+def benchmark_riffpex(dataset, ndigits, th, label, native=False):
     if native and not have_native:
         print("--- native benchmark skipped ---")
         return
+    ns = riffpe.find_best_bases(xfactors={2: ndigits, 5: ndigits}, threshold=th)
+    print(f"--- best bases for (digits={ndigits}, th={th}) -> {ns!r}")
     if native:
         fpe = riffpe._native.RiffpeX(ns, BENCHMARK_KEY, BENCHMARK_TAG)
     else:
         fpe = riffpe._fallback.RiffpeX(ns, BENCHMARK_KEY, BENCHMARK_TAG)
 
-    descr = f"RiffpeX{tuple(ns)!r} {'[native]' if native else '[Python]'}"
+    descr = f"RiffpeX(n>={th}) {'[native]' if native else '[Python]'}"
     _benchmark_common(dataset, label, descr,
                       (lambda entry: riffpe.int_to_bases(entry, ns)),
                       fpe.encrypt, fpe.decrypt)
@@ -149,11 +154,42 @@ def benchmark_go_ff3(dataset, ndigits, label):
                       fpe.Encrypt, fpe.Decrypt)
 
 
+def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: List[int]):
+    # Python impls
+    benchmark_pyffx(dataset, ndigits, label)
+    benchmark_ff3(dataset, ndigits, label)
+    for n in ns:
+        log10n = int(math.log10(n))
+        if ndigits % log10n != 0:
+            print(f"--- riffpe n = {n} skipped (domain not divisible) ---")
+        l = ndigits // log10n
+        benchmark_riffpe(dataset, n, l, label, False)
+    for th in fbb_ths:
+        benchmark_riffpex(dataset, ndigits, th, label, False)
+
+    # Native impls
+    benchmark_go_ff1(dataset, ndigits, label)
+    benchmark_go_ff3(dataset, ndigits, label)
+    for n in ns:
+        log10n = int(math.log10(n))
+        if ndigits % log10n != 0:
+            print(f"--- riffpe n = {n} skipped (domain not divisible) ---")
+        l = ndigits // log10n
+        benchmark_riffpe(dataset, n, l, label, True)
+    for th in fbb_ths:
+        benchmark_riffpex(dataset, ndigits, th, label, True)
+
+
 # Benchmark dataset 1: full credit card numbers [16-digit base10 integers]
 # Riffpe configurations under test:
 #  * n=10, l=16 (potentially insecure)
 #  * n=100, l=8
 #  * n=10000, l=4
+# RiffpeX configurations under test:
+#  * n >= 16 (20, 20, 20, 20, 20, 20, 20, 20, 25, 25, 25, 25)
+#  * n >= 24 (25, 25, 25, 25, 25, 25, 25, 32, 32, 40, 40)
+#  * n >= 32 (50, 50, 50, 50, 50, 50, 80, 80, 100)
+#  * n >= 50 (50, 50, 50, 50, 50, 50, 80, 80, 100)
 
 BENCHMARK_DATASET_1_LENGTH = 10_000
 
@@ -162,17 +198,7 @@ BENCHMARK_DATASET_1 = [
     for _ in range(BENCHMARK_DATASET_1_LENGTH)
 ]
 
-
-benchmark_pyffx(BENCHMARK_DATASET_1, 16, "[16-digit base10 integers]")
-benchmark_ff3(BENCHMARK_DATASET_1, 16, "[16-digit base10 integers]")
-benchmark_riffpe(BENCHMARK_DATASET_1, 10,    16, "[16-digit base10 integers]", False)
-benchmark_riffpe(BENCHMARK_DATASET_1, 100,   8,  "[16-digit base10 integers]", False)
-benchmark_riffpe(BENCHMARK_DATASET_1, 10000, 4,  "[16-digit base10 integers]", False)
-benchmark_go_ff1(BENCHMARK_DATASET_1, 16, "[16-digit base10 integers]")
-benchmark_go_ff3(BENCHMARK_DATASET_1, 16, "[16-digit base10 integers]")
-benchmark_riffpe(BENCHMARK_DATASET_1, 10,    16, "[16-digit base10 integers]", True)
-benchmark_riffpe(BENCHMARK_DATASET_1, 100,   8,  "[16-digit base10 integers]", True)
-benchmark_riffpe(BENCHMARK_DATASET_1, 10000, 4,  "[16-digit base10 integers]", True)
+all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16, (16, 24, 32, 50), (10, 100, 10000))
 
 
 # Benchmark dataset 2: inner 6 credit card digits [6-digit base10 integers]
@@ -180,6 +206,11 @@ benchmark_riffpe(BENCHMARK_DATASET_1, 10000, 4,  "[16-digit base10 integers]", T
 #  * n=10, l=6 (potentially insecure)
 #  * n=100, l=3
 #  * n=1000, l=2
+# RiffpeX configurations under test:
+#  * n >= 16 (25, 25, 40, 40)
+#  * n >= 24 (25, 25, 40, 40)
+#  * n >= 32 (100, 100, 100)
+#  * n >= 50 (100, 100, 100)
 
 BENCHMARK_DATASET_2_LENGTH = 10_000
 
@@ -188,17 +219,7 @@ BENCHMARK_DATASET_2 = [
     for _ in range(BENCHMARK_DATASET_2_LENGTH)
 ]
 
-
-benchmark_pyffx(BENCHMARK_DATASET_2, 6, "[6-digit base10 integers]")
-benchmark_ff3(BENCHMARK_DATASET_2, 6, "[6-digit base10 integers]")
-benchmark_riffpe(BENCHMARK_DATASET_2, 10,   6, "[6-digit base10 integers]", False)
-benchmark_riffpe(BENCHMARK_DATASET_2, 100,  3, "[6-digit base10 integers]", False)
-benchmark_riffpe(BENCHMARK_DATASET_2, 1000, 2, "[6-digit base10 integers]", False)
-benchmark_go_ff1(BENCHMARK_DATASET_2, 6, "[6-digit base10 integers]")
-benchmark_go_ff3(BENCHMARK_DATASET_2, 6, "[6-digit base10 integers]")
-benchmark_riffpe(BENCHMARK_DATASET_2, 10,   6, "[6-digit base10 integers]", True)
-benchmark_riffpe(BENCHMARK_DATASET_2, 100,  3, "[6-digit base10 integers]", True)
-benchmark_riffpe(BENCHMARK_DATASET_2, 1000, 2, "[6-digit base10 integers]", True)
+all_benchmarks_for_dataset(BENCHMARK_DATASET_2, "[6-digit base10 integers]", 6, (16, 24, 32, 50), (10, 100, 1000))
 
 
 # Benchmark dataset 3: inner 9 credit card digits [9-digit base10 integers]
@@ -206,9 +227,10 @@ benchmark_riffpe(BENCHMARK_DATASET_2, 1000, 2, "[6-digit base10 integers]", True
 #  * n=10, l=9 (potentially insecure)
 #  * n=1000, l=3
 # RiffpeX configurations under test:
-#  * (100, 100, 100, 1000)
-#  * (50, 50, 40, 100, 100)
-#  * (50, 50, 50, 80, 100)
+#  * n >= 16 (25, 25, 25, 40, 40, 40)
+#  * n >= 24 (25, 25, 25, 40, 40, 40)
+#  * n >= 32 (50, 50, 50, 80, 100)
+#  * n >= 50 (50, 50, 50, 80, 100)
 
 BENCHMARK_DATASET_3_LENGTH = 10_000
 
@@ -217,20 +239,4 @@ BENCHMARK_DATASET_3 = [
     for _ in range(BENCHMARK_DATASET_3_LENGTH)
 ]
 
-
-benchmark_pyffx(BENCHMARK_DATASET_3, 9, "[9-digit base10 integers]")
-benchmark_ff3(BENCHMARK_DATASET_3, 9, "[9-digit base10 integers]")
-benchmark_riffpe(BENCHMARK_DATASET_3, 10,   9, "[9-digit base10 integers]", False)
-benchmark_riffpe(BENCHMARK_DATASET_3, 1000, 3, "[9-digit base10 integers]", False)
-benchmark_riffpex(BENCHMARK_DATASET_3, (100, 100, 100, 1000),  "[9-digit base10 integers]", False)
-benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 40, 100, 100), "[9-digit base10 integers]", False)
-benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 50, 80, 100),  "[9-digit base10 integers]", False)
-benchmark_riffpex(BENCHMARK_DATASET_3, (25, 25, 25, 25, 40, 64),  "[9-digit base10 integers]", False)
-benchmark_go_ff1(BENCHMARK_DATASET_3, 6, "[9-digit base10 integers]")
-benchmark_go_ff3(BENCHMARK_DATASET_3, 6, "[9-digit base10 integers]")
-benchmark_riffpe(BENCHMARK_DATASET_3, 10,   9, "[9-digit base10 integers]", True)
-benchmark_riffpe(BENCHMARK_DATASET_3, 1000, 3, "[9-digit base10 integers]", True)
-benchmark_riffpex(BENCHMARK_DATASET_3, (100, 100, 100, 1000),  "[9-digit base10 integers]", True)
-benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 40, 100, 100), "[9-digit base10 integers]", True)
-benchmark_riffpex(BENCHMARK_DATASET_3, (50, 50, 50, 80, 100),  "[9-digit base10 integers]", True)
-benchmark_riffpex(BENCHMARK_DATASET_3, (25, 25, 25, 25, 40, 64),  "[9-digit base10 integers]", True)
+all_benchmarks_for_dataset(BENCHMARK_DATASET_3, "[9-digit base10 integers]", 9, (16, 24, 32, 50), (10, 1000))
