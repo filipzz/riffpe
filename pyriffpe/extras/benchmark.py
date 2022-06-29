@@ -187,18 +187,18 @@ def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: 
 #  * n=10000, l=4
 # RiffpeX configurations under test:
 #  * n >= 16 (20, 20, 20, 20, 20, 20, 20, 20, 25, 25, 25, 25)
-#  * n >= 24 (25, 25, 25, 25, 25, 25, 25, 32, 32, 40, 40)
+#  * n >= 25 (25, 25, 25, 25, 25, 25, 25, 32, 32, 40, 40)
 #  * n >= 32 (50, 50, 50, 50, 50, 50, 80, 80, 100)
 #  * n >= 50 (50, 50, 50, 50, 50, 50, 80, 80, 100)
 
-BENCHMARK_DATASET_1_LENGTH = 10_000
+BENCHMARK_DATASET_1_LENGTH = 100_000
 
 BENCHMARK_DATASET_1 = [
     random.randrange(10000_0000_0000_0000)
     for _ in range(BENCHMARK_DATASET_1_LENGTH)
 ]
 
-all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16, (16, 24, 32, 50), (10, 100, 10000))
+all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16, (16, 25, 32, 50), (10, 100, 10000))
 
 
 # Benchmark dataset 2: inner 6 credit card digits [6-digit base10 integers]
@@ -208,18 +208,18 @@ all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16
 #  * n=1000, l=2
 # RiffpeX configurations under test:
 #  * n >= 16 (25, 25, 40, 40)
-#  * n >= 24 (25, 25, 40, 40)
+#  * n >= 25 (25, 25, 40, 40)
 #  * n >= 32 (100, 100, 100)
 #  * n >= 50 (100, 100, 100)
 
-BENCHMARK_DATASET_2_LENGTH = 10_000
+BENCHMARK_DATASET_2_LENGTH = 100_000
 
 BENCHMARK_DATASET_2 = [
     random.randrange(1000_000)
     for _ in range(BENCHMARK_DATASET_2_LENGTH)
 ]
 
-all_benchmarks_for_dataset(BENCHMARK_DATASET_2, "[6-digit base10 integers]", 6, (16, 24, 32, 50), (10, 100, 1000))
+all_benchmarks_for_dataset(BENCHMARK_DATASET_2, "[6-digit base10 integers]", 6, (16, 25, 32, 50), (10, 100, 1000))
 
 
 # Benchmark dataset 3: inner 9 credit card digits [9-digit base10 integers]
@@ -228,15 +228,15 @@ all_benchmarks_for_dataset(BENCHMARK_DATASET_2, "[6-digit base10 integers]", 6, 
 #  * n=1000, l=3
 # RiffpeX configurations under test:
 #  * n >= 16 (25, 25, 25, 40, 40, 40)
-#  * n >= 24 (25, 25, 25, 40, 40, 40)
+#  * n >= 25 (25, 25, 25, 40, 40, 40)
 #  * n >= 32 (50, 50, 50, 80, 100)
 #  * n >= 50 (50, 50, 50, 80, 100)
 
-BENCHMARK_DATASET_3_LENGTH = 10_000
+BENCHMARK_DATASET_3_LENGTH = 100_000
 
 BENCHMARK_DATASET_3 = [
     random.randrange(1000_000_000)
     for _ in range(BENCHMARK_DATASET_3_LENGTH)
 ]
 
-all_benchmarks_for_dataset(BENCHMARK_DATASET_3, "[9-digit base10 integers]", 9, (16, 24, 32, 50), (10, 1000))
+all_benchmarks_for_dataset(BENCHMARK_DATASET_3, "[9-digit base10 integers]", 9, (16, 25, 32, 50), (10, 1000))
