@@ -34,7 +34,7 @@ Running a benchmark should be as easy as
    which means it includes binding overheads for "native" targets.
  * Some Riffpe comfigurations are marked as *N/A*, when it's impossible
    to construct a Riffpe instance with given parameters, e.g. it's
-   impossible to describe $Z_{10^16}$ as a product of $Z_1000$.
+   impossible to describe $Z_{10^{16}}$ as a product of $Z_{1000}$.
 
 
 ## Test platform 1
