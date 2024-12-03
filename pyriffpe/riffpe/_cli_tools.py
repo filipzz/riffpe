@@ -36,7 +36,7 @@ def crypt_main(parser: argparse.ArgumentParser, is_decrypt: bool):
                       args.chops)
     
     message_split = int_to_digits(args.message, args.length, args.base, order)
-    process_func = instance.dec if is_decrypt else instance.enc
+    process_func = instance.decrypt if is_decrypt else instance.encrypt
     output_split = process_func(message_split)
     output = digits_to_int(output_split, args.base, order)
     
