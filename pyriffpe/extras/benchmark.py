@@ -184,7 +184,7 @@ def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: 
 # Riffpe configurations under test:
 #  * n=10, l=16 (potentially insecure)
 #  * n=100, l=8
-#  * n=10000, l=4
+#  * n=10000, l=4 (skipped for now)
 # RiffpeX configurations under test:
 #  * n >= 16 (20, 20, 20, 20, 20, 20, 20, 20, 25, 25, 25, 25)
 #  * n >= 25 (25, 25, 25, 25, 25, 25, 25, 32, 32, 40, 40)
@@ -198,7 +198,7 @@ BENCHMARK_DATASET_1 = [
     for _ in range(BENCHMARK_DATASET_1_LENGTH)
 ]
 
-all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16, (16, 25, 32, 50), (10, 100))
+all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16, (16, 25, 50), (10, 100))
 
 
 # Benchmark dataset 2: inner 6 credit card digits [6-digit base10 integers]
@@ -219,7 +219,7 @@ BENCHMARK_DATASET_2 = [
     for _ in range(BENCHMARK_DATASET_2_LENGTH)
 ]
 
-all_benchmarks_for_dataset(BENCHMARK_DATASET_2, "[6-digit base10 integers]", 6, (16, 25, 32, 50), (10, 100, 1000))
+all_benchmarks_for_dataset(BENCHMARK_DATASET_2, "[6-digit base10 integers]", 6, (25, 50), (10, 100, 1000))
 
 
 # Benchmark dataset 3: inner 9 credit card digits [9-digit base10 integers]
@@ -239,4 +239,4 @@ BENCHMARK_DATASET_3 = [
     for _ in range(BENCHMARK_DATASET_3_LENGTH)
 ]
 
-all_benchmarks_for_dataset(BENCHMARK_DATASET_3, "[9-digit base10 integers]", 9, (16, 25, 32, 50), (10, 1000))
+all_benchmarks_for_dataset(BENCHMARK_DATASET_3, "[9-digit base10 integers]", 9, (25, 50), (10, 1000))
