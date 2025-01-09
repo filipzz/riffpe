@@ -3,6 +3,7 @@
 
 #include "RifflePerm.hpp"
 #include "riffpe_detail.hpp"
+#include "mem_utils.hpp"  // store_u32_le
 
 #include <algorithm>
 #include <stdexcept>
@@ -19,13 +20,13 @@ namespace riffpe
     {
         _el_size = detail::_validate_params(_c, _l, _chop);
 
-        std::vector<uint8_t> _tweak_buf(sizeof(_c) + sizeof(_l) + 2 + tweak_length);
-        // FIXME: add non-LE version, like in generic AES
-        std::memcpy(_tweak_buf.data() + 0, &_c, 4);
-        _tweak_buf[4] = '_';
-        std::memcpy(_tweak_buf.data() + 5, &_l, 4);
-        _tweak_buf[9] = '^';
-        std::memcpy(_tweak_buf.data() + 10, tweak, tweak_length);
+        static_assert(sizeof(uint32_t)*2 + sizeof(uint64_t) == 16);
+        std::vector<uint8_t> _tweak_buf;
+        _tweak_buf.reserve(sizeof(uint32_t)*2 + sizeof(uint64_t) + tweak_length);
+        riffpe::util::push_u32_le(_tweak_buf, _c);
+        riffpe::util::push_u32_le(_tweak_buf, _l);
+        riffpe::util::push_u64_le(_tweak_buf, tweak_length);
+        _tweak_buf.insert(_tweak_buf.end(), tweak, tweak + tweak_length);
         // add standard pkcs7 padding
         uint8_t padding_byte = int(aes_engine_type::block_size) + (-int(_tweak_buf.size()) % int(aes_engine_type::block_size));
         _tweak_buf.insert(_tweak_buf.end(), padding_byte, padding_byte);

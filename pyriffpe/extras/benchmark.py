@@ -198,7 +198,7 @@ BENCHMARK_DATASET_1 = [
     for _ in range(BENCHMARK_DATASET_1_LENGTH)
 ]
 
-all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16, (16, 25, 50), (10, 100))
+all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16, (16, 25, 50), (10, 100)) # 10000
 
 
 # Benchmark dataset 2: inner 6 credit card digits [6-digit base10 integers]

@@ -8,10 +8,11 @@ from .CBCTweakablePRNG import CBCTweakablePRNG
 
 
 class Riffpe:
+    # KDF uses Little Endian encoding
+    __kdf_order__ = '<'
 
     @classmethod
     def _get_kdf_params(cls, c: int):
-        kdf_order = '<'
         if c < 256:
             kdf_bytes = 1
             kdf_el_struct = struct.Struct('B')
@@ -24,7 +25,7 @@ class Riffpe:
         else:
             raise ValueError(f"Radix {c} too big (must be < 32 bits)")
         assert kdf_el_struct.size == kdf_bytes
-        return (kdf_order, kdf_bytes, kdf_el_struct)
+        return (cls.__kdf_order__, kdf_bytes, kdf_el_struct)
     
     def _kdf_init(self, c: int):
         self._kdf_params = self._get_kdf_params(c)
@@ -42,8 +43,8 @@ class Riffpe:
 
         self._kdf_init(c)
 
-        self.perm_tweak_pfx = struct.pack(f'<IcIc{len(self.tweak)}s', self.c,
-                                          b'_', self.l, b'^', self.tweak)
+        self.perm_tweak_pfx = struct.pack(f'{self.__kdf_order__}IIQ{len(self.tweak)}s', self.c,
+                                          self.l, len(self.tweak), self.tweak)
         self.perm_tweak_pfx = pad(self.perm_tweak_pfx,
                                   AES.block_size,
                                   style='pkcs7')
