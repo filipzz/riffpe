@@ -45,6 +45,9 @@ with open(ifname, 'r') as f:
 
 impls = list(matrix.keys())
 datasets = set(ds for imp in impls for ds in matrix[imp])
+# HOTFIX for consistent columns: 6/9/16
+re_column = re.compile(r"\[(\d+)-.+\]")
+datasets = sorted(datasets, key=lambda x: int(re_column.match(x).group(1)))
 
 
 def ns_to_unit(unit, time_ns):
