@@ -254,6 +254,58 @@ RiffpeX(n>=50) [native] | 13.981167 us                 | 14.594120 us           
 
 
 ## Test platform 5
+
+```
+Apple MacBook Pro M3 
+CPU: Apple Silicon M3
+RAM: 36GB
+```
+
+
+**Encryption time**
+Implementation          | [6-digit base10 integers] | [9-digit base10 integers]    | [16-digit base10 integers]
+------------------------|---------------------------|------------------------------|---------------------------
+pyffx                   | 19.444915 us              | 21.172657 us                 | 23.122047 us              
+FF3 [Python]            | 16.863991 us              | 19.621980 us                 | 25.738379 us              
+Riffpe(n=10) [Python]   | 55.075674 us              | 82.509539 us                 | 145.577507 us             
+Riffpe(n=100) [Python]  | 128.902214 us             | *N/A*                        | 343.145806 us             
+Riffpe(n=1000) [Python] | 942.183500 us             | 1448.266519 us (1.448267 ms) | *N/A*                     
+RiffpeX(n>=16) [Python] | *N/A*                     | *N/A*                        | 155.819945 us             
+RiffpeX(n>=25) [Python] | 68.612205 us              | 102.555249 us                | 172.635678 us             
+RiffpeX(n>=50) [Python] | 129.314760 us             | 150.042073 us                | 254.394272 us             
+FF1 [Go]                | 1.850072 us               | 1.823908 us                  | 1.955441 us               
+FF3 [Go]                | 3.097339 us               | 3.241303 us                  | 3.555541 us               
+Riffpe(n=10) [native]   | 1.695244 us               | 2.403553 us                  | 4.037695 us               
+Riffpe(n=100) [native]  | 16.677125 us              | *N/A*                        | 44.745565 us              
+Riffpe(n=1000) [native] | 174.140379 us             | 268.708087 us                | *N/A*                     
+RiffpeX(n>=16) [native] | *N/A*                     | *N/A*                        | 10.092650 us              
+RiffpeX(n>=25) [native] | 5.861662 us               | 8.933298 us                  | 14.047371 us              
+RiffpeX(n>=50) [native] | 16.509270 us              | 17.492825 us                 | 29.017033 us              
+
+
+**Decryption time**
+
+Implementation          | [6-digit base10 integers] | [9-digit base10 integers]    | [16-digit base10 integers]
+------------------------|---------------------------|------------------------------|---------------------------
+pyffx                   | 19.481547 us              | 21.243491 us                 | 23.203869 us              
+FF3 [Python]            | 16.962539 us              | 19.580746 us                 | 25.682651 us              
+Riffpe(n=10) [Python]   | 56.981769 us              | 85.491255 us                 | 151.389730 us             
+Riffpe(n=100) [Python]  | 133.130482 us             | *N/A*                        | 355.040964 us             
+Riffpe(n=1000) [Python] | 972.661738 us             | 1496.702079 us (1.496702 ms) | *N/A*                     
+RiffpeX(n>=16) [Python] | *N/A*                     | *N/A*                        | 161.588549 us             
+RiffpeX(n>=25) [Python] | 71.205992 us              | 106.337158 us                | 179.119136 us             
+RiffpeX(n>=50) [Python] | 133.686178 us             | 155.678183 us                | 263.932461 us             
+FF1 [Go]                | 1.920768 us               | 1.895865 us                  | 2.008697 us               
+FF3 [Go]                | 3.222272 us               | 3.373040 us                  | 3.656863 us               
+Riffpe(n=10) [native]   | 1.580319 us               | 2.248571 us                  | 3.806976 us               
+Riffpe(n=100) [native]  | 10.145970 us              | *N/A*                        | 28.919716 us              
+Riffpe(n=1000) [native] | 132.414228 us             | 214.683895 us                | *N/A*
+RiffpeX(n>=16) [native] | *N/A*                     | *N/A*                        | 7.734065 us               
+RiffpeX(n>=25) [native] | 4.059833 us               | 6.193440 us                  | 9.927761 us               
+RiffpeX(n>=50) [native] | 10.074040 us              | 11.106956 us                 | 18.926257 us              
+
+
+## Test platform 6
 ```
 CPU: Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz
 RAM: 64 GB
