@@ -21,6 +21,7 @@ add_library(riffpe
             src/AESEngine.cpp
             src/AESEngineGeneric.cpp
             $<$<BOOL:${RIFFPE_CXX_EXT_AESNI_AVAILABLE}>:src/AESEngineAESNI.cpp>
+            $<$<BOOL:${RIFFPE_CXX_EXT_AESNEON_AVAILABLE}>:src/AESEngineARM64.cpp>
             src/Riffpe.cpp
             src/RiffpeX.cpp
             )
@@ -47,6 +48,9 @@ if(RIFFPE_CXX_EXT_GET_CPUID_AVAILABLE)
 endif()
 if(RIFFPE_CXX_EXT_AESNI_AVAILABLE AND NOT RIFFPE_DISABLE_ACCELERATION)
     target_compile_definitions(riffpe PRIVATE RIFFPE_HAVE_AESNI=1)
+endif()
+if(RIFFPE_CXX_EXT_AESNEON_AVAILABLE AND NOT RIFFPE_DISABLE_ACCELERATION)
+    target_compile_definitions(riffpe PRIVATE RIFFPE_HAVE_AESNEON=1)
 endif()
 
 add_executable(test_aes_engine tests/test_aes_engine.cpp)

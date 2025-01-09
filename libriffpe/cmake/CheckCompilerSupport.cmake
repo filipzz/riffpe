@@ -20,6 +20,8 @@ check_cxx_source_compiles("#include \"${CMAKE_CURRENT_LIST_DIR}/test_sources/det
 check_cxx_source_compiles("#include \"${CMAKE_CURRENT_LIST_DIR}/test_sources/detect_x86_get_cpuid.cpp\" "     RIFFPE_CXX_EXT_GET_CPUID_AVAILABLE)
 check_cxx_source_compiles("#include \"${CMAKE_CURRENT_LIST_DIR}/test_sources/detect_x86_mm_loadu_si64.cpp\" " RIFFPE_CXX_EXT_MM_LOADU_SI64_AVAILABLE)
 
+check_cxx_source_compiles("#include \"${CMAKE_CURRENT_LIST_DIR}/test_sources/detect_arm64_aesneon.cpp\" "     RIFFPE_CXX_EXT_AESNEON_AVAILABLE)
+
 # Unset CMAKE_REQUIRED_FLAGS
 set (CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
 
