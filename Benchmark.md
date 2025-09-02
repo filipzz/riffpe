@@ -352,7 +352,7 @@ RiffpeX(n>=25) [native] | 8.868536 us                  | 13.122316 us           
 RiffpeX(n>=50) [native] | 24.976424 us                 | 26.701513 us                 | 45.999327 us              
 
 
-## Test platform 6
+## Test platform 7
 ```
 CPU: Intel(R) Xeon(R) CPU E3-1245 v5 @ 3.50GHz
 RAM: 32GB RDIMM 2133 MHz
