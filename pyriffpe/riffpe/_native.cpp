@@ -86,7 +86,7 @@ public:
 };
 
 
-Riffpe make_riffpe_py(uint32_t c, uint32_t l, py::bytes key, py::bytes tweak, uint32_t chop)
+Riffpe make_riffpe_py(uint32_t radix, uint32_t digits, py::bytes key, py::bytes tweak, uint32_t bytes_per_value)
 {
     py::buffer_info key_info(py::buffer(key).request());
     size_t key_len = key_info.shape[0];
@@ -94,11 +94,11 @@ Riffpe make_riffpe_py(uint32_t c, uint32_t l, py::bytes key, py::bytes tweak, ui
     py::buffer_info tweak_info(py::buffer(tweak).request());
     size_t tweak_len = tweak_info.shape[0];
 
-    return Riffpe(c, l, reinterpret_cast<const uint8_t*>(key_info.ptr), key_len, reinterpret_cast<const uint8_t*>(tweak_info.ptr), tweak_len, chop);
+    return Riffpe(radix, digits, reinterpret_cast<const uint8_t*>(key_info.ptr), key_len, reinterpret_cast<const uint8_t*>(tweak_info.ptr), tweak_len, bytes_per_value);
 }
 
 
-RiffpeX make_riffpex_py(std::vector<uint32_t> cs, py::bytes key, py::bytes tweak, uint32_t chop)
+RiffpeX make_riffpex_py(std::vector<uint32_t> radices, py::bytes key, py::bytes tweak, uint32_t bytes_per_value)
 {
     py::buffer_info key_info(py::buffer(key).request());
     size_t key_len = key_info.shape[0];
@@ -106,7 +106,7 @@ RiffpeX make_riffpex_py(std::vector<uint32_t> cs, py::bytes key, py::bytes tweak
     py::buffer_info tweak_info(py::buffer(tweak).request());
     size_t tweak_len = tweak_info.shape[0];
 
-    return RiffpeX(cs.data(), cs.data() + cs.size(), reinterpret_cast<const uint8_t*>(key_info.ptr), key_len, reinterpret_cast<const uint8_t*>(tweak_info.ptr), tweak_len, chop);
+    return RiffpeX(radices.data(), radices.data() + radices.size(), reinterpret_cast<const uint8_t*>(key_info.ptr), key_len, reinterpret_cast<const uint8_t*>(tweak_info.ptr), tweak_len, bytes_per_value);
 }
 
 PYBIND11_MODULE(_native, m)
@@ -124,7 +124,7 @@ PYBIND11_MODULE(_native, m)
     
     py::class_<Riffpe>(m, "Riffpe")
         .def(py::init<>(&make_riffpe_py), 
-             py::arg("c"), py::arg("l"), py::arg("key"), py::arg("tweak"), py::arg("chop") = 1)
+             py::arg("c"), py::arg("l"), py::arg("key"), py::arg("tweak"), py::arg("bytes_per_value") = 16)
         .def("encrypt", &Riffpe::encrypt)
         .def("decrypt", &Riffpe::decrypt)
         .def("_aes_engine_id", &Riffpe::aes_engine_id)
@@ -132,7 +132,7 @@ PYBIND11_MODULE(_native, m)
     
     py::class_<RiffpeX>(m, "RiffpeX")
         .def(py::init<>(&make_riffpex_py), 
-             py::arg("cs"), py::arg("key"), py::arg("tweak"), py::arg("chop") = 1)
+             py::arg("cs"), py::arg("key"), py::arg("tweak"), py::arg("bytes_per_value") = 16)
         .def("encrypt", &RiffpeX::encrypt)
         .def("decrypt", &RiffpeX::decrypt)
         .def("_aes_engine_id", &RiffpeX::aes_engine_id)

@@ -12,7 +12,7 @@ where = ["pyriffpe"]
 
 [project]
 name = "riffpe"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     { name="Filip Zagórski", email="filip.zagorski@pwr.edu.pl" },
     { name="Marcin Słowik",  email="marcin.slowik@pwr.edu.pl" },

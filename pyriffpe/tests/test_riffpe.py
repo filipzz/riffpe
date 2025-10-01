@@ -10,9 +10,9 @@ from riffpe import Riffpe
 
 @dataclass
 class KATEntry:
-    c: int
-    l: int
-    chops: int
+    radix: int
+    digits: int
+    bytes_per_value: int
     key: bytes
     tag: bytes
     plaintext: List[int]
@@ -34,13 +34,13 @@ KAT_ENTRIES = [
 
 @pytest.mark.parametrize('kat_entry', KAT_ENTRIES)
 def test_encrypt_kat(kat_entry: KATEntry):
-    fpe = Riffpe(kat_entry.c, kat_entry.l, kat_entry.key, kat_entry.tag, kat_entry.chops)
+    fpe = Riffpe(kat_entry.radix, kat_entry.digits, kat_entry.key, kat_entry.tag, kat_entry.bytes_per_value)
     ctx = fpe.encrypt(kat_entry.plaintext)
     assert ctx == kat_entry.ciphertext
 
 
 @pytest.mark.parametrize('kat_entry', KAT_ENTRIES)
 def test_decrypt_kat(kat_entry: KATEntry):
-    fpe = Riffpe(kat_entry.c, kat_entry.l, kat_entry.key, kat_entry.tag, kat_entry.chops)
+    fpe = Riffpe(kat_entry.radix, kat_entry.digits, kat_entry.key, kat_entry.tag, kat_entry.bytes_per_value)
     ptx = fpe.decrypt(kat_entry.ciphertext)
     assert ptx == kat_entry.plaintext

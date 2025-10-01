@@ -12,18 +12,18 @@ class Riffpe:
     __kdf_order__ = '<'
 
     @classmethod
-    def _get_kdf_params(cls, c: int):
-        if c < 256:
+    def _get_kdf_params(cls, radix: int):
+        if radix < 256:
             kdf_bytes = 1
             kdf_el_struct = struct.Struct('B')
-        elif c < 65536:
+        elif radix < 65536:
             kdf_bytes = 2
             kdf_el_struct = struct.Struct('H')
-        elif c < 4294967296:
+        elif radix < 4294967296:
             kdf_bytes = 4
             kdf_el_struct = struct.Struct('I')
         else:
-            raise ValueError(f"Radix {c} too big (must be < 32 bits)")
+            raise ValueError(f"Radix {radix} too big (must be < 32 bits)")
         assert kdf_el_struct.size == kdf_bytes
         return (cls.__kdf_order__, kdf_bytes, kdf_el_struct)
     
@@ -34,28 +34,28 @@ class Riffpe:
 
         self._kdf_el_to_bytes = self._kdf_struct.pack
 
-    def __init__(self, c: int, l: int, key: bytes(16), tweak: bytes, chop=1):
-        self.c = c
-        self.l = l
+    def __init__(self, radix: int, digits: int, key: bytes(16), tweak: bytes, bytes_per_value: int = 16):
+        self.radix = radix
+        self.digits = digits
         self.key = key
         self.tweak = tweak
-        self.chop = chop
+        self.bytes_per_value = bytes_per_value
 
-        self._kdf_init(c)
+        self._kdf_init(radix)
 
-        self.perm_tweak_pfx = struct.pack(f'{self.__kdf_order__}IIQ{len(self.tweak)}s', self.c,
-                                          self.l, len(self.tweak), self.tweak)
+        self.perm_tweak_pfx = struct.pack(f'{self.__kdf_order__}IIQ{len(self.tweak)}s', self.radix,
+                                          self.digits, len(self.tweak), self.tweak)
         self.perm_tweak_pfx = pad(self.perm_tweak_pfx,
                                   AES.block_size,
                                   style='pkcs7')
-        self.perm_fun = Perm(self.c, self.chop)
+        self.perm_fun = Perm(self.radix, self.bytes_per_value)
         # This is a precomputed part, used later as an IV,
         # which is equivalent to including the whole prefix
         self.tweak_iv = AES.new(self.key, AES.MODE_CBC, iv=bytes(AES.block_size))\
                            .encrypt(self.perm_tweak_pfx)[-AES.block_size:]
         self.prng = CBCTweakablePRNG(self.key, b'', iv=self.tweak_iv)
 
-    def perm(self, x: int, tweak: bytes, inv: int):
+    def perm(self, x: int, tweak: bytes, inverse: bool):
         """
         Returns a value of a pseudorandom permutation (or its inverse)
         :param x: element to be permuted
@@ -64,7 +64,7 @@ class Riffpe:
         :return:
         """
         self.prng.reset(tweak, iv=self.tweak_iv)
-        return self.perm_fun.perm(self.prng, x, inv)
+        return self.perm_fun.perm(self.prng, x, inverse)
 
     def round(self, f, m, inverse=False):
         """
@@ -75,7 +75,7 @@ class Riffpe:
         :return:
         """
         tdstate = self._td_state_init(m)
-        i_range = range(self.l - 1, -1, -1) if inverse else range(self.l)
+        i_range = range(self.digits - 1, -1, -1) if inverse else range(self.digits)
         for i in i_range:
             tweak = self._td_state_update(tdstate, m, i, f, inverse)
             m[i] = self.perm(m[i], tweak, inverse)
@@ -83,7 +83,7 @@ class Riffpe:
     def _td_state_init(self, m):
         # Buffer is: self.l elements of self._kdf_bytes, which includes a round marker at ith position
         # +1 element of kdf_bytes for 'i' after the array.
-        tweak_len = (self.l + 1) * self._kdf_bytes
+        tweak_len = (self.digits + 1) * self._kdf_bytes
         tweak_buf = bytearray(tweak_len + (-tweak_len) % 16)
         idx = 0
         for x in m:
@@ -103,7 +103,7 @@ class Riffpe:
         :param inverse: whether it's an inverse round (determines which element in state needs updating)
         """
         tweak_buf = state
-        l = self.l
+        l = self.digits
         if not inverse:
             # forward round and element > 0 -> previous element needs updating
             if i != 0:
@@ -131,7 +131,7 @@ class Riffpe:
         :return:
         """
         x = list(x)
-        assert len(x) == self.l
+        assert len(x) == self.digits
 
         # absorbing phase
         self.round(0, x)
@@ -148,7 +148,7 @@ class Riffpe:
         :return:
         """
         x = list(x)
-        assert len(x) == self.l
+        assert len(x) == self.digits
 
         # inverting squeezing phase
         self.round(1, x, True)

@@ -19,16 +19,16 @@ except ImportError:
 
 @dataclass
 class ConfEntry:
-    c: int
-    l: int
-    chops: int
+    radix: int
+    digits: int
+    bytes_per_value: int
     tag_len: int
 
 
 TEST_ENTRIES = [
-    ConfEntry(100, 8, 1, 10),
-    ConfEntry(100, 8, 1, 32),
-    ConfEntry(47, 13, 1, 10),
+    ConfEntry(100, 8, 16, 10),
+    ConfEntry(100, 8, 16, 32),
+    ConfEntry(47, 13, 16, 10),
     ConfEntry(47, 13, 4, 10),
 ]
 
@@ -41,10 +41,10 @@ def test_parity(test_entry: ConfEntry):
         pytest.skip("Native implementation missing")
     key = randbytes(16)
     tag = randbytes(test_entry.tag_len)
-    imp_f = RiffpeF(test_entry.c, test_entry.l, key, tag, test_entry.chops)
-    imp_n = RiffpeN(test_entry.c, test_entry.l, key, tag, test_entry.chops)
+    imp_f = RiffpeF(test_entry.radix, test_entry.digits, key, tag, test_entry.bytes_per_value)
+    imp_n = RiffpeN(test_entry.radix, test_entry.digits, key, tag, test_entry.bytes_per_value)
     for _ in range(TEST_REPEATS):
-        val_a = choices(range(test_entry.c), k=test_entry.l)
+        val_a = choices(range(test_entry.radix), k=test_entry.digits)
         # test: b = enc_n(a); c = dec_f(b); a == c
         val_b = imp_f.encrypt(val_a)
         val_c = imp_n.decrypt(val_b)
@@ -58,15 +58,15 @@ def test_parity(test_entry: ConfEntry):
 # RiffpeX
 @dataclass
 class ConfEntryX:
-    cs: List[int]
-    chops: int
+    radices: List[int]
+    bytes_per_value: int
     tag_len: int
 
 
 TEST_ENTRIES_X = [
-    ConfEntryX([10, 20, 30, 40], 1, 10),
-    ConfEntryX([10, 20, 30, 40], 1, 32),
-    ConfEntryX([40, 50, 50, 100], 1, 10),
+    ConfEntryX([10, 20, 30, 40], 16, 10),
+    ConfEntryX([10, 20, 30, 40], 16, 32),
+    ConfEntryX([40, 50, 50, 100], 16, 10),
     ConfEntryX([40, 50, 50, 100], 4, 10),
 ]
 
@@ -79,10 +79,10 @@ def test_parity_x(test_entry: ConfEntryX):
         pytest.skip("Native implementation missing")
     key = randbytes(16)
     tag = randbytes(test_entry.tag_len)
-    imp_f = RiffpeXF(test_entry.cs, key, tag, test_entry.chops)
-    imp_n = RiffpeXN(test_entry.cs, key, tag, test_entry.chops)
+    imp_f = RiffpeXF(test_entry.radices, key, tag, test_entry.bytes_per_value)
+    imp_n = RiffpeXN(test_entry.radices, key, tag, test_entry.bytes_per_value)
     for _ in range(TEST_REPEATS_X):
-        val_a = [randrange(c) for c in test_entry.cs]
+        val_a = [randrange(c) for c in test_entry.radices]
         # test: b = enc_n(a); c = dec_f(b); a == c
         val_b = imp_f.encrypt(val_a)
         val_c = imp_n.decrypt(val_b)

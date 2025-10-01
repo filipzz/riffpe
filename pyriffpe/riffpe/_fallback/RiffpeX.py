@@ -1,5 +1,4 @@
-from typing import Iterable
-
+from typing import Sequence
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
@@ -15,29 +14,29 @@ class RiffpeX(Riffpe):
     from Riffpe(10, 2).
     """
 
-    def __init__(self, cs: Iterable[int], key: bytes(16), tweak: bytes, chop=1):
-        self.cs = cs
-        self.l = len(cs)
-        maxc = max(cs)
+    def __init__(self, radices: Sequence[int], key: bytes(16), tweak: bytes, bytes_per_value: int = 16):
+        self.radices = radices
+        self.digits = len(radices)
+        maxradix = max(radices)
         self.key = key
         self.tweak = tweak
-        self.chop = chop
+        self.bytes_per_value = bytes_per_value
 
-        self._kdf_init(maxc)
+        self._kdf_init(maxradix)
 
         # Using ':' as a digit separator to ensure different tweaks from regular Riffpe even for the same key.
-        self.perm_tweak_pfx = b':'.join(c.to_bytes(4, 'little') for c in cs) + b'^' + self.tweak
+        self.perm_tweak_pfx = b':'.join(c.to_bytes(4, 'little') for c in radices) + b'^' + self.tweak
         self.perm_tweak_pfx = pad(self.perm_tweak_pfx,
                                   AES.block_size,
                                   style='pkcs7')
-        self.perm_funs = [Perm(c, self.chop) for c in cs]
+        self.perm_funs = [Perm(c, self.bytes_per_value) for c in radices]
         # This is a precomputed part, used later as an IV,
         # which is equivalent to including the whole prefix
         self.tweak_iv = AES.new(self.key, AES.MODE_CBC, iv=bytes(AES.block_size))\
                            .encrypt(self.perm_tweak_pfx)[-AES.block_size:]
         self.prng = CBCTweakablePRNG(self.key, b'', iv=self.tweak_iv)
 
-    def perm(self, i: int, x: int, tweak: bytes, inv: int):
+    def perm(self, i: int, x: int, tweak: bytes, inverse: bool):
         """
         Returns a value of a pseudorandom permutation (or its inverse)
         :param i: index of the permutation (due to )
@@ -47,7 +46,7 @@ class RiffpeX(Riffpe):
         :return:
         """
         self.prng.reset(tweak, iv=self.tweak_iv)
-        return self.perm_funs[i].perm(self.prng, x, inv)
+        return self.perm_funs[i].perm(self.prng, x, inverse)
 
     def round(self, f, m, inverse=False):
         """
@@ -59,7 +58,8 @@ class RiffpeX(Riffpe):
         :return:
         """
         tdstate = self._td_state_init(m)
-        i_range = range(self.l - 1, -1, -1) if inverse else range(self.l)
+        i_range = range(self.digits - 1, -1, -1) if inverse else range(self.digits)
         for i in i_range:
             tweak = self._td_state_update(tdstate, m, i, f, inverse)
             m[i] = self.perm(i, m[i], tweak, inverse)
+

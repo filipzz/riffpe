@@ -9,3 +9,7 @@ build*/
 
 *.egg-info/
 dist/
+
+# _native in development builds
+pyriffpe/riffpe/*.so
+

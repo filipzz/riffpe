@@ -3,9 +3,9 @@ from .._common.TweakablePRNG import TweakablePRNG
 
 class Perm:
 
-    def __init__(self, c: int, chop=1):
-        self.c = c
-        self.bytes_per_value = 16 // chop
+    def __init__(self, elements: int, bytes_per_value: int = 16):
+        self.elements = elements
+        self.bytes_per_value = bytes_per_value
 
     def perm(self, prng: TweakablePRNG, x: int, inv: bool):
         """
@@ -21,11 +21,11 @@ class Perm:
         # each "card" is assigned pseudo-randomly generated bits
         # then a permutation is obtained by sorting the cards
 
-        msg_len = self.bytes_per_value * self.c
+        msg_len = self.bytes_per_value * self.elements
         msg_len_padded = msg_len + (-msg_len % prng.block_size)
         stream = prng.get_bytes(msg_len_padded)
         cipher_value_pairs = [(stream[idx * self.bytes_per_value:(idx + 1) * self.bytes_per_value], idx)
-                              for idx in range(self.c)]
+                              for idx in range(self.elements)]
         cipher_value_pairs.sort()
 
         if not inv:
