@@ -22,8 +22,8 @@ namespace riffpe
     {
     protected:
         const std::vector<uint32_t> _cs;
-        const uint32_t _l;
-        const uint32_t _chop;
+        const uint32_t _digits;
+        const uint32_t _bytes_per_value;
         
         uint32_t _el_size;        
         std::vector<std::unique_ptr<RifflePermBase>> _perms;
@@ -39,18 +39,18 @@ namespace riffpe
         void enc_dec_impl(std::vector<uint32_t>& message);
 
     public:
-        RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t chop = 1);
+        RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value = 16);
         RiffpeX(RiffpeX&&);
         ~RiffpeX();
 
         template<typename ElType, bool Inverse>
         void round(uint32_t f, ElType* message);
 
-        uint32_t count() const { return _l; }
+        uint32_t count() const { return _digits; }
 
         std::vector<uint32_t> encrypt(std::vector<uint32_t> message)
         {
-            if(message.size() != _l)
+            if(message.size() != _digits)
                 throw std::length_error("Invalid message length");
             switch(_el_size)
             {
@@ -64,7 +64,7 @@ namespace riffpe
 
         std::vector<uint32_t> decrypt(std::vector<uint32_t> message)
         {
-            if(message.size() != _l)
+            if(message.size() != _digits)
                 throw std::length_error("Invalid message length");
             switch(_el_size)
             {

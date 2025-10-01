@@ -22,7 +22,7 @@ This repository contains the following:
 To install full developement version from source issue:
 
 ```bash
-pip install -e .
+pip install -e .[tests,benchmark]
 ```
 
 This should pull all required build dependencies.
@@ -35,13 +35,13 @@ Message encryption:
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 1234123456785678
-0914050408195228
+3594761421525475
 ```
 
 Message decryption:
 
 ```bash
-$ python -m riffpe.decrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 0914050408195228
+$ python -m riffpe.decrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 3594761421525475
 1234123456785678
 ```
 
@@ -50,17 +50,17 @@ may be requested by providing `-B` switch:
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 1234123456785678
-0914050408195228
+3594761421525475
 
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 7856785634123412 -B
-2852190804051409
+7554522114769435
 ```
 
-**Note**: `2852190804051409` is `0914050408195228` in reverse (in chunks of 2 digits, since $n=100$), just as `7856785634123412` is `1234123456785678`.
+**Note**: `3594761421525475` is `7554522114769435` in reverse (in chunks of 2 digits, since $n=100$), just as `7856785634123412` is `1234123456785678`.
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 7766554433221100 -t 416C696365
-6396218874103160
+0284503011236181
 ```
 
 Currently tag (`-T`) must be passed as a hex string.
@@ -86,14 +86,17 @@ print("ptx:", ptx)
 ```
 
 Output:
-```
+
+```python
 ctx: [28, 52, 19, 8, 4, 5, 14, 9]
 ptx: [78, 56, 78, 56, 34, 12, 34, 12]
 ```
 
 ## Testing
 
-[TBD]
+```bash
+pytest pyriffpe/tests
+```
 
 ## Performance
 

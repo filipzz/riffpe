@@ -38,6 +38,9 @@ dependencies = [
 tests = [
   "pytest"
 ]
+benchmark = [
+  "tqdm", "ff3", "pyffx", "pybindgen"
+]
 
 [project.urls]
 "Homepage" = "https://github.com/filipzz/riffpe"

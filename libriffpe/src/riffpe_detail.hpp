@@ -8,21 +8,18 @@ namespace riffpe
 {
     namespace detail
     {
-        inline uint32_t _validate_params(uint32_t c, uint32_t l, uint32_t chop)
+        inline uint32_t _validate_params(uint32_t radix, uint32_t digits)
         {
             uint32_t el_size;
 
-            if ((chop != 1) && (chop != 2) && (chop != 4) && (chop != 8) && (chop != 16))
-                throw std::length_error("Chop currently must be a power of 2 between 1 and 16");
-            
-            if(l < 1)
+            if(digits < 1)
                 throw std::length_error("Cipher must have at least one digit.");
 
-            if(c < 256)
+            if(radix < 256)
                 el_size = sizeof(uint8_t);
-            else if(c < 65536)
+            else if(radix < 65536)
                 el_size = sizeof(uint16_t);
-            else if(c < 4294967296)
+            else if(radix < 4294967296)
                 el_size = sizeof(uint32_t);
             else
                 throw std::length_error("Radix too big (must be < 32 bits)");

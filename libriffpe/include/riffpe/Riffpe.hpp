@@ -21,9 +21,9 @@ namespace riffpe
     class Riffpe
     {
     protected:
-        const uint32_t _c;
-        const uint32_t _l;
-        const uint32_t _chop;
+        const uint32_t _radix;
+        const uint32_t _digits;
+        const uint32_t _bytes_per_value;
         
         uint32_t _el_size;
         std::unique_ptr<RifflePermBase> _perm;
@@ -46,11 +46,11 @@ namespace riffpe
         template<typename ElType, bool Inverse>
         void round(uint32_t f, ElType* message);
 
-        uint32_t count() const { return _l; }
+        uint32_t count() const { return _digits; }
 
         std::vector<uint32_t> encrypt(std::vector<uint32_t> message)
         {
-            if(message.size() != _l)
+            if(message.size() != _digits)
                 throw std::length_error("Invalid message length");
             switch(_el_size)
             {
@@ -64,7 +64,7 @@ namespace riffpe
 
         std::vector<uint32_t> decrypt(std::vector<uint32_t> message)
         {
-            if(message.size() != _l)
+            if(message.size() != _digits)
                 throw std::length_error("Invalid message length");
             switch(_el_size)
             {

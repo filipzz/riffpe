@@ -16,13 +16,13 @@ namespace riffpe
 {
     using aes_engine_type = crypto::AESEngine;
 
-    RiffpeX::RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t chop)
-        : _cs(c_begin, c_end), _l(c_end - c_begin), _chop(chop), _aes_engine(aes_engine_type::engine_factory())
+    RiffpeX::RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value)
+        : _cs(c_begin, c_end), _digits(c_end - c_begin), _bytes_per_value(bytes_per_value), _aes_engine(aes_engine_type::engine_factory())
     {
         uint32_t maxc = *std::max_element(c_begin, c_end);
-        _el_size = detail::_validate_params(maxc, _l, chop);
+        _el_size = detail::_validate_params(maxc, _digits);
 
-        std::vector<uint8_t> _tweak_buf((sizeof(maxc) + 1) * _l + tweak_length);
+        std::vector<uint8_t> _tweak_buf((sizeof(maxc) + 1) * _digits + tweak_length);
         uint8_t* uptr = _tweak_buf.data();
         for(const uint32_t& c : _cs)  // _validate_params ensures there is at least one element in _cs
         {
@@ -44,7 +44,7 @@ namespace riffpe
         _aes_engine->encrypt_cbc(_tweak_buf.data(), nullptr, _tweak_buf.size() / aes_engine_type::block_size, _aes_state_template.data());
 
         for(auto c : _cs)
-            _perms.emplace_back(RifflePermBase::make_unique(_el_size, _chop, c, *_aes_engine));
+            _perms.emplace_back(RifflePermBase::make_unique(_el_size, _bytes_per_value, c, *_aes_engine));
     }
 
     RiffpeX::RiffpeX(RiffpeX&&) = default;
@@ -53,19 +53,19 @@ namespace riffpe
     template<typename ElType, bool Inverse>
     void RiffpeX::round(uint32_t f, ElType* message)
     {
-        size_t tweak_len = sizeof(ElType) * _l;
+        size_t tweak_len = sizeof(ElType) * _digits;
         size_t tweak_padded_blocks = (tweak_len + aes_engine_type::block_size - 1)
                                    / aes_engine_type::block_size;
-        for(int i=0; i<_l; ++i)
+        for(int i=0; i<_digits; ++i)
         {
             int j = Inverse
-                  ? (_l - i - 1)
+                  ? (_digits - i - 1)
                   : i;
             auto& perm = dynamic_cast<RifflePerm<ElType>&>(*_perms[j]);
             auto aes_state = _aes_state_template;
             ElType x = message[j];
             message[j] = f;
-            message[_l] = j;
+            message[_digits] = j;
             // Absorb the message view (+f marker) as the rest of tweak into the AES state
             // This is equivalent to computing CBC-MAC into aes_state.
             _aes_engine->encrypt_cbc(reinterpret_cast<const uint8_t*>(message), nullptr, 
