@@ -32,7 +32,8 @@ except ImportError:
 
 # Run make_fpe_bindings.py to generate Python bindings for these targets
 try:
-    import os, sys
+    import os
+    import sys
     _bench_ws_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '.bench_ws'))
     sys.path.append(_bench_ws_path)
 
@@ -51,6 +52,9 @@ try:
 except ImportError:
     tqdm = lambda x: x
 
+
+BENCHMARK_PYTHON = False
+BENCHMARK_NATIVE = True
 
 BENCHMARK_TAG = bytes.fromhex("0011223344556677")
 BENCHMARK_KEY = bytes.fromhex("0123456789abcdef0123456789abcdef")
@@ -78,18 +82,31 @@ def _benchmark_common(dataset, label: str, descr: str, encode, encrypt, decrypt)
     sys.stdout.flush()
 
 
-def benchmark_riffpe(dataset, n, l, label, native=False):
+bpvs = {
+    (128, 10): 144//8, # 137 bits
+    (128, 100): 144//8, # 144 bits
+    (128, 1000): 152//8, # 152 bits
+    (128, 10000): 160//8, # 157 bits
+    (256, 10): 272//8, # 265 bits
+    (256, 100): 272//8, # 272 bits
+    (256, 1000): 280//8, # 278 bits
+    (256, 10000): 288//8, # 285 bits
+}
+
+
+def benchmark_riffpe(dataset, radix, digits, label, bits: int, native=False):
     if native and not have_native:
         print("--- native benchmark skipped ---")
         return
+    bpv = bpvs[bits, radix]
     if native:
-        fpe = riffpe._native.Riffpe(n, l, BENCHMARK_KEY, BENCHMARK_TAG)
+        fpe = riffpe._native.Riffpe(radix, digits, BENCHMARK_KEY, BENCHMARK_TAG, bpv)
     else:
-        fpe = riffpe._fallback.Riffpe(n, l, BENCHMARK_KEY, BENCHMARK_TAG)
+        fpe = riffpe._fallback.Riffpe(radix, digits, BENCHMARK_KEY, BENCHMARK_TAG, bpv)
 
-    descr = f"Riffpe({n}, {l}) {'[native]' if native else '[Python]'}"
+    descr = f"Riffpe({radix}, {digits}, {bits}-bits) {'[native]' if native else '[Python]'}"
     _benchmark_common(dataset, label, descr,
-                      (lambda entry: riffpe.int_to_digits(entry, l, n)),
+                      (lambda entry: riffpe.int_to_digits(entry, digits, radix)),
                       fpe.encrypt, fpe.decrypt)
 
 
@@ -134,50 +151,54 @@ def benchmark_pyffx(dataset, ndigits, label):
 
 def benchmark_go_ff1(dataset, ndigits, label):
     if not have_gofpe:
-        print(f"--- go ff1 (binding) benchmark skipped ---")
+        print("--- go ff1 (binding) benchmark skipped ---")
         return
     fpe = gofpe.ff1.NewCipher(10, len(BENCHMARK_TAG), gofpe.go.Slice_byte(BENCHMARK_KEY), gofpe.go.Slice_byte(BENCHMARK_TAG))
 
-    _benchmark_common(dataset, label, f"FF1 [Go]",
+    _benchmark_common(dataset, label, "FF1 [Go]",
                       (lambda entry: format(entry, f'0{ndigits}d')),
                       fpe.Encrypt, fpe.Decrypt)
 
 
 def benchmark_go_ff3(dataset, ndigits, label):
     if not have_gofpe:
-        print(f"--- go ff3 (binding) benchmark skipped ---")
+        print("--- go ff3 (binding) benchmark skipped ---")
         return
     fpe = gofpe.ff3.NewCipher(10, gofpe.go.Slice_byte(BENCHMARK_KEY), gofpe.go.Slice_byte(BENCHMARK_TAG))
 
-    _benchmark_common(dataset, label, f"FF3 [Go]",
+    _benchmark_common(dataset, label, "FF3 [Go]",
                       (lambda entry: format(entry, f'0{ndigits}d')),
                       fpe.Encrypt, fpe.Decrypt)
 
 
 def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: List[int]):
     # Python impls
-    benchmark_pyffx(dataset, ndigits, label)
-    benchmark_ff3(dataset, ndigits, label)
-    for n in ns:
-        log10n = int(math.log10(n))
-        if ndigits % log10n != 0:
-            print(f"--- riffpe n = {n} skipped (domain not divisible) ---")
-        l = ndigits // log10n
-        benchmark_riffpe(dataset, n, l, label, False)
-    for th in fbb_ths:
-        benchmark_riffpex(dataset, ndigits, th, label, False)
+    if BENCHMARK_PYTHON:
+        benchmark_pyffx(dataset, ndigits, label)
+        benchmark_ff3(dataset, ndigits, label)
+        for radix in ns:
+            log10n = int(math.log10(radix))
+            if ndigits % log10n != 0:
+                print(f"--- riffpe radix = {radix} skipped (domain not divisible) ---")
+            digits = ndigits // log10n
+            benchmark_riffpe(dataset, radix, digits, label, 128, False)
+            benchmark_riffpe(dataset, radix, digits, label, 256, False)
+        for th in fbb_ths:
+            benchmark_riffpex(dataset, ndigits, th, label, False)
 
-    # Native impls
-    benchmark_go_ff1(dataset, ndigits, label)
-    benchmark_go_ff3(dataset, ndigits, label)
-    for n in ns:
-        log10n = int(math.log10(n))
-        if ndigits % log10n != 0:
-            print(f"--- riffpe n = {n} skipped (domain not divisible) ---")
-        l = ndigits // log10n
-        benchmark_riffpe(dataset, n, l, label, True)
-    for th in fbb_ths:
-        benchmark_riffpex(dataset, ndigits, th, label, True)
+    if BENCHMARK_NATIVE:
+        # Native impls
+        benchmark_go_ff1(dataset, ndigits, label)
+        benchmark_go_ff3(dataset, ndigits, label)
+        for radix in ns:
+            log10n = int(math.log10(radix))
+            if ndigits % log10n != 0:
+                print(f"--- riffpe radix = {radix} skipped (domain not divisible) ---")
+            digits = ndigits // log10n
+            benchmark_riffpe(dataset, radix, digits, label, 128, True)
+            benchmark_riffpe(dataset, radix, digits, label, 256, True)
+        for th in fbb_ths:
+            benchmark_riffpex(dataset, ndigits, th, label, True)
 
 
 # Benchmark dataset 1: full credit card numbers [16-digit base10 integers]
