@@ -1,15 +1,13 @@
-#include <riffpe/Riffpe.hpp>
-#include <riffpe/AESEngine.hpp>
+#include "../include/riffpe/Riffpe.hpp"
+#include "../include/riffpe/AESEngine.hpp"
+
+#include <vector>
+
+#include <cstring>
 
 #include "RifflePerm.hpp"
 #include "riffpe_detail.hpp"
 #include "mem_utils.hpp"  // store_u32_le
-
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-
-#include <cstring>
 
 namespace riffpe
 {
@@ -44,7 +42,8 @@ namespace riffpe
         std::memset(_aes_state_template.data(), 0, aes_engine_type::block_size);
         _aes_engine->encrypt_cbc(_tweak_buf.data(), nullptr, _tweak_buf.size() / aes_engine_type::block_size, _aes_state_template.data());
 
-        _perm = RifflePermBase::make_unique(_el_size, _bytes_per_value, _radix, *_aes_engine);
+        _perm_fwd = RifflePermBase::make_unique_fwd(_el_size, _bytes_per_value, _radix, *_aes_engine);
+        _perm_rev = RifflePermBase::make_unique_rev(_el_size, _bytes_per_value, _radix, *_aes_engine);
     }
 
     Riffpe::Riffpe(Riffpe&&) = default;
@@ -53,7 +52,8 @@ namespace riffpe
     template<typename ElType, bool Inverse>
     void Riffpe::round(uint32_t f, detail::message_span_type<ElType> message)
     {
-        auto& perm = dynamic_cast<RifflePerm<ElType>&>(*_perm);
+        auto& perm_fwd = dynamic_cast<RifflePermFwd<ElType>&>(*_perm_fwd);
+        auto& perm_rev = dynamic_cast<RifflePermRev<ElType>&>(*_perm_rev);
 
         for(int i=0; i<_digits; ++i)
         {
@@ -68,11 +68,10 @@ namespace riffpe
             // This is equivalent to computing CBC-MAC into aes_state.
             _aes_engine->encrypt_cbc(message.data.as_bytes, nullptr, 
                                      message.byte_size / aes_engine_type::block_size, aes_state.data());
-            perm.recompute(aes_state);
             if constexpr (Inverse)
-                message.data.as_elems[j] = perm.reverse(x);
+                message.data.as_elems[j] = perm_rev.reverse(aes_state, x);
             else
-                message.data.as_elems[j] = perm.forward(x);
+                message.data.as_elems[j] = perm_fwd.forward(aes_state, x);
         }
     }
 

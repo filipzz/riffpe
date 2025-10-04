@@ -1,16 +1,15 @@
-#include <riffpe/RiffpeX.hpp>
-#include <riffpe/AESEngine.hpp>
+#include "../include/riffpe/RiffpeX.hpp"
+#include "../include/riffpe/AESEngine.hpp"
+
+#include <algorithm>
+#include <vector>
+
+#include <cstring>
 
 #include "RifflePerm.hpp"
 #include "riffpe_detail.hpp"
 #include "riffpe_detail.hpp"
 #include "mem_utils.hpp"
-
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-
-#include <cstring>
 
 namespace riffpe
 {
@@ -43,8 +42,10 @@ namespace riffpe
         std::memset(_aes_state_template.data(), 0, aes_engine_type::block_size);
         _aes_engine->encrypt_cbc(_tweak_buf.data(), nullptr, _tweak_buf.size() / aes_engine_type::block_size, _aes_state_template.data());
 
-        for(auto c : _cs)
-            _perms.emplace_back(RifflePermBase::make_unique(_el_size, _bytes_per_value, c, *_aes_engine));
+        for(auto c : _cs) {
+            _perms_fwd.emplace_back(RifflePermBase::make_unique_fwd(_el_size, _bytes_per_value, c, *_aes_engine));
+            _perms_rev.emplace_back(RifflePermBase::make_unique_rev(_el_size, _bytes_per_value, c, *_aes_engine));
+        }
     }
 
     RiffpeX::RiffpeX(RiffpeX&&) = default;
@@ -58,7 +59,6 @@ namespace riffpe
             int j = Inverse
                   ? (_digits - i - 1)
                   : i;
-            auto& perm = dynamic_cast<RifflePerm<ElType>&>(*_perms[j]);
             auto aes_state = _aes_state_template;
             ElType x = message.data.as_elems[j];
             message.data.as_elems[j] = f;
@@ -67,11 +67,13 @@ namespace riffpe
             // This is equivalent to computing CBC-MAC into aes_state.
             _aes_engine->encrypt_cbc(message.data.as_bytes, nullptr, 
                                      message.byte_size / aes_engine_type::block_size, aes_state.data());
-            perm.recompute(aes_state);
-            if constexpr (Inverse)
-                message.data.as_elems[j] = perm.reverse(x);
-            else
-                message.data.as_elems[j] = perm.forward(x);
+            if constexpr (Inverse) {
+                auto& perm = dynamic_cast<RifflePermRev<ElType>&>(*_perms_rev[j]);
+                message.data.as_elems[j] = perm.reverse(aes_state, x);
+            } else {
+                auto& perm = dynamic_cast<RifflePermFwd<ElType>&>(*_perms_fwd[j]);
+                message.data.as_elems[j] = perm.forward(aes_state, x);
+            }
         }
     }
 

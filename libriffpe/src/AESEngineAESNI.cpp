@@ -1,8 +1,9 @@
 #include "AESEngineAESNI.hpp"
-#include "x86_utils.hpp"
 
-#include <exception>
+#include <stdexcept>
 #include <sstream>
+
+#include "x86_utils.hpp"
 
 namespace riffpe
 {

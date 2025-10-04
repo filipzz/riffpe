@@ -1,9 +1,11 @@
 #pragma once
 
+#include "../include/riffpe/AESEngine.hpp"
+
 #include <array>
+
 #include <cstdint>
 
-#include <riffpe/AESEngine.hpp>
 #include "compiler_id.h"
 
 namespace riffpe

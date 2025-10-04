@@ -1,10 +1,14 @@
 #pragma once
 
-#include "mem_utils.hpp"
-#include <memory>
-#include <riffpe/AESEngine.hpp>
+#include "../include/riffpe/detail.hpp"
+#include "../include/riffpe/AESEngine.hpp"
+
+#include <stdexcept>
+#include <vector>
 
 #include <cstdint>
+
+#include "mem_utils.hpp"
 
 namespace riffpe
 {
