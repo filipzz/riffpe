@@ -5,11 +5,10 @@ import math
 
 
 def add_common_cli_arguments(parser: argparse.ArgumentParser):
-    parser.add_argument("-n", "--base", help="Space size", type=int, default=100)
-    parser.add_argument("-l", "--length", help="Number of slices", type=int, default=8)
-    parser.add_argument("-t", "--tag", help="Hex-encoded tag", type=bytes.fromhex, default="")
-    # FIXME: check if this is correct, fix otherwise
-    parser.add_argument("--chops", help="lenght of the random walk is 32//chops", type=int, default=1)
+    parser.add_argument("-n", "--radix", help="Space size", type=int, default=100)
+    parser.add_argument("-l", "--digits", help="Number of slices", type=int, default=8)
+    parser.add_argument("-t", "--tweak", help="Hex-encoded tweak (tag)", type=bytes.fromhex, default=b"")
+    parser.add_argument("-b", "--bytes-per-value", help="lenght of the random walk is 8-bit increments", type=int, default=16)
 
 def add_crypt_cli_arguments(parser: argparse.ArgumentParser, is_decrypt: bool):
     add_common_cli_arguments(parser)
@@ -29,20 +28,22 @@ def crypt_main(parser: argparse.ArgumentParser, is_decrypt: bool):
     # Parameter validation
     assert len(args.key) in (16, 24, 32)
 
-    instance = Riffpe(args.base,
-                      args.length,
-                      args.key,
-                      args.tag,
-                      args.chops)
+    instance = Riffpe(
+        radix=args.radix,
+        digits=args.digits,
+        key=args.key,
+        tweak=args.tweak,
+        bytes_per_value=args.bytes_per_value,
+    )
     
-    message_split = int_to_digits(args.message, args.length, args.base, order)
+    message_split = int_to_digits(args.message, args.digits, args.radix, order)
     process_func = instance.decrypt if is_decrypt else instance.encrypt
     output_split = process_func(message_split)
-    output = digits_to_int(output_split, args.base, order)
+    output = digits_to_int(output_split, args.radix, order)
     
     # Count number of digits for the max value
     # and ensure the printed value is properly padded
 
-    no_digits = math.ceil(math.log10(pow(args.base, args.length)))
+    no_digits = math.ceil(math.log10(pow(args.radix, args.digits)))
     
     print(format(output, f'0{no_digits}d'))

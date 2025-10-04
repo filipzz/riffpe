@@ -35,13 +35,13 @@ Message encryption:
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 1234123456785678
-3594761421525475
+3123769254898119
 ```
 
 Message decryption:
 
 ```bash
-$ python -m riffpe.decrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 3594761421525475
+$ python -m riffpe.decrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 3123769254898119
 1234123456785678
 ```
 
@@ -50,31 +50,34 @@ may be requested by providing `-B` switch:
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 1234123456785678
-3594761421525475
+3123769254898119
 
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 7856785634123412 -B
-7554522114769435
+1981895492762331
 ```
 
 **Note**: `3594761421525475` is `7554522114769435` in reverse (in chunks of 2 digits, since $n=100$), just as `7856785634123412` is `1234123456785678`.
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 7766554433221100 -t 416C696365
-0284503011236181
+2601183984852660
 ```
 
-Currently tag (`-T`) must be passed as a hex string.
+Currently tag (`-t`) must be passed as a hex string.
 In future, possibly another option will allow ASCII or UTF-8 encoding.
 In the example above, tag `416C696365` corresponds to an ASCII string `"Alice"`.
-
 
 As a Python module:
 
 ```python
 from riffpe import Riffpe
 
-#            n    l  key                                                tag
-fpe = Riffpe(100, 8, bytes.fromhex("00112233445566778899aabbccddeeff"), b'')
+fpe = Riffpe(
+    radix=100, 
+    digits=8, 
+    key=bytes.fromhex("00112233445566778899aabbccddeeff"),
+    tweak=b'',
+)
 
 ptx = [78, 56, 78, 56, 34, 12, 34, 12]
 
@@ -88,7 +91,7 @@ print("ptx:", ptx)
 Output:
 
 ```python
-ctx: [28, 52, 19, 8, 4, 5, 14, 9]
+ctx: [19, 81, 89, 54, 92, 76, 23, 31]
 ptx: [78, 56, 78, 56, 34, 12, 34, 12]
 ```
 

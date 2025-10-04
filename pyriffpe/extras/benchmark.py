@@ -173,9 +173,9 @@ def benchmark_go_ff3(dataset, ndigits, label):
 
 def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: List[int]):
     # Python impls
+    benchmark_pyffx(dataset, ndigits, label)
+    benchmark_ff3(dataset, ndigits, label)
     if BENCHMARK_PYTHON:
-        benchmark_pyffx(dataset, ndigits, label)
-        benchmark_ff3(dataset, ndigits, label)
         for radix in ns:
             log10n = int(math.log10(radix))
             if ndigits % log10n != 0:
@@ -186,10 +186,10 @@ def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: 
         for th in fbb_ths:
             benchmark_riffpex(dataset, ndigits, th, label, False)
 
+    # Native impls
+    benchmark_go_ff1(dataset, ndigits, label)
+    benchmark_go_ff3(dataset, ndigits, label)
     if BENCHMARK_NATIVE:
-        # Native impls
-        benchmark_go_ff1(dataset, ndigits, label)
-        benchmark_go_ff3(dataset, ndigits, label)
         for radix in ns:
             log10n = int(math.log10(radix))
             if ndigits % log10n != 0:

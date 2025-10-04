@@ -1,7 +1,7 @@
 import pytest
 
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Sequence
 
 from riffpe import find_best_bases
 
@@ -10,7 +10,7 @@ from riffpe import find_best_bases
 class FBBEntry:
     x: int
     t: int
-    expected: Tuple[int]
+    expected: Sequence[int]
 
 FBB_ENTRIES = [
     FBBEntry(x=7_000_000_000, t=30, expected=(35, 40, 40, 50, 50, 50)),

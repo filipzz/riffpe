@@ -124,7 +124,12 @@ PYBIND11_MODULE(_native, m)
     
     py::class_<Riffpe>(m, "Riffpe")
         .def(py::init<>(&make_riffpe_py), 
-             py::arg("c"), py::arg("l"), py::arg("key"), py::arg("tweak"), py::arg("bytes_per_value") = 16)
+             py::arg("radix"), 
+             py::arg("digits"),
+             py::arg("key"),
+             py::arg("tweak"),
+             py::arg("bytes_per_value") = 16
+        )
         .def("encrypt", &Riffpe::encrypt)
         .def("decrypt", &Riffpe::decrypt)
         .def("_aes_engine_id", &Riffpe::aes_engine_id)
@@ -132,7 +137,11 @@ PYBIND11_MODULE(_native, m)
     
     py::class_<RiffpeX>(m, "RiffpeX")
         .def(py::init<>(&make_riffpex_py), 
-             py::arg("cs"), py::arg("key"), py::arg("tweak"), py::arg("bytes_per_value") = 16)
+             py::arg("radices"),
+             py::arg("key"),
+             py::arg("tweak"),
+             py::arg("bytes_per_value") = 16
+        )
         .def("encrypt", &RiffpeX::encrypt)
         .def("decrypt", &RiffpeX::decrypt)
         .def("_aes_engine_id", &RiffpeX::aes_engine_id)
