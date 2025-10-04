@@ -34,7 +34,7 @@ class Riffpe:
 
         self._kdf_el_to_bytes = self._kdf_struct.pack
 
-    def __init__(self, radix: int, digits: int, key: bytes(16), tweak: bytes, bytes_per_value: int = 16):
+    def __init__(self, radix: int, digits: int, key: bytes, tweak: bytes, bytes_per_value: int = 16):
         self.radix = radix
         self.digits = digits
         self.key = key
@@ -66,25 +66,29 @@ class Riffpe:
         self.prng.reset(tweak, iv=self.tweak_iv)
         return self.perm_fun.perm(self.prng, x, inverse)
 
-    def round(self, f, m, inverse=False):
+    def round(self, phase, message, inverse=False):
         """
         Computes a single round of Riffpe
-        :param f: Phase id: 0 - absorbing phase, 1 - squeezing phase
-        :param m: message to be transformed
+        :param phase: Phase id: 0 - absorbing phase, 1 - squeezing phase
+        :param message: message to be transformed
         :param inverse: select whether to run forward or reverse operation
         :return:
         """
-        tdstate = self._td_state_init(m)
+        tdstate = self._td_state_init(message)
         i_range = range(self.digits - 1, -1, -1) if inverse else range(self.digits)
         for i in i_range:
-            tweak = self._td_state_update(tdstate, m, i, f, inverse)
-            m[i] = self.perm(m[i], tweak, inverse)
+            tweak = self._td_state_update(tdstate, message, i, phase, inverse)
+            message[i] = self.perm(message[i], tweak, inverse)
 
     def _td_state_init(self, m):
-        # Buffer is: self.l elements of self._kdf_bytes, which includes a round marker at ith position
-        # +1 element of kdf_bytes for 'i' after the array.
+        """
+        Initialize tweak derivation state buffer.
+        
+        Buffer is: self.digits elements of self._kdf_bytes, which includes a round marker at ith position
+        +1 element of kdf_bytes for 'i' after the array.
+        """
         tweak_len = (self.digits + 1) * self._kdf_bytes
-        tweak_buf = bytearray(tweak_len + (-tweak_len) % 16)
+        tweak_buf = bytearray(pad(bytes(tweak_len), AES.block_size, 'pkcs7'))
         idx = 0
         for x in m:
             self._kdf_struct.pack_into(tweak_buf, idx, x)

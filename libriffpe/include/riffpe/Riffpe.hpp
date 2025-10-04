@@ -7,17 +7,10 @@
 #include <cstdint>
 
 #include "AESEngine.hpp"
+#include "detail.hpp"
 
 namespace riffpe
 {
-    class RifflePermBase;
-    namespace detail
-    {
-        // This effectively reduces code duplication between Riffpe & RiffpeX
-        template<typename ElType, bool Inverse, typename RiffpeClass>
-        void enc_dec_impl(std::vector<uint32_t>& message, RiffpeClass* pthis);
-    }
-
     class Riffpe
     {
     protected:
@@ -44,7 +37,7 @@ namespace riffpe
         ~Riffpe();
 
         template<typename ElType, bool Inverse>
-        void round(uint32_t f, ElType* message);
+        void round(uint32_t f, detail::message_span_type<ElType> message);
 
         uint32_t count() const { return _digits; }
 

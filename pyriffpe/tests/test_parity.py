@@ -26,12 +26,14 @@ class ConfEntry:
 
 
 TEST_ENTRIES = [
+    ConfEntry(4, 2, 16, 5),
     ConfEntry(100, 8, 16, 10),
     ConfEntry(100, 8, 16, 32),
     ConfEntry(47, 13, 16, 10),
     ConfEntry(47, 13, 4, 10),
     ConfEntry(100, 8, 1, 10),
-    ConfEntry(100, 8, 27, 10),
+    *(ConfEntry(100, i, 4, 10) for i in range(1, 17)),
+    *(ConfEntry(100, 15, i, 10) for i in range(1, 32)),
 ]
 
 TEST_REPEATS = 32

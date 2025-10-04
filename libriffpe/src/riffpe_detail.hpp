@@ -1,5 +1,7 @@
 #pragma once
 
+#include "mem_utils.hpp"
+#include <memory>
 #include <riffpe/AESEngine.hpp>
 
 #include <cstdint>
@@ -35,33 +37,37 @@ namespace riffpe
             using aes_engine_type = crypto::AESEngine;
 
             size_t tweak_len = sizeof(ElType) * (l + 1);
-            size_t tweak_padded_blocks = (tweak_len + aes_engine_type::block_size - 1)
-                                    / aes_engine_type::block_size;
-            size_t tweak_padded_size   = tweak_padded_blocks
-                                    * aes_engine_type::block_size;
-            size_t el_count_padded = tweak_padded_size / sizeof(ElType);
+            
+            std::vector<uint8_t> message_raw_buf(tweak_len, 0);
+            // PKCS#7 padding
+            riffpe::util::push_pkcs7_padding(message_raw_buf, aes_engine_type::block_size);
 
-            std::vector<ElType> message_buf(el_count_padded, 0);
+            size_t el_count_padded = message_raw_buf.size() / sizeof(ElType);
+            message_span_type<ElType> message_buf {
+                .byte_size = message_raw_buf.size(),
+                .data = { .as_bytes = message_raw_buf.data() }
+            };
+
             for(int i=0; i<l; ++i)
-                message_buf[i] = message[i];
+                message_buf.data.as_elems[i] = message[i];
             
             if constexpr (!Inverse)
             {
                 // Absorbing phase
-                pthis->template round<ElType, Inverse>(0, message_buf.data());
+                pthis->template round<ElType, Inverse>(0, message_buf);
                 // Squeezing phase
-                pthis->template round<ElType, Inverse>(1, message_buf.data());
+                pthis->template round<ElType, Inverse>(1, message_buf);
             }
             else
             {
                 // Inverse absorbing phase
-                pthis->template round<ElType, Inverse>(1, message_buf.data());
+                pthis->template round<ElType, Inverse>(1, message_buf);
                 // Inverse squeezing phase
-                pthis->template round<ElType, Inverse>(0, message_buf.data());
+                pthis->template round<ElType, Inverse>(0, message_buf);
             }
 
             for(int i=0; i<l; ++i)
-                message[i] = message_buf[i];
+                message[i] = message_buf.data.as_elems[i];
         }
     }
 }

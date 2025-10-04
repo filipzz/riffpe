@@ -51,11 +51,8 @@ namespace riffpe
     RiffpeX::~RiffpeX() = default;    
 
     template<typename ElType, bool Inverse>
-    void RiffpeX::round(uint32_t f, ElType* message)
+    void RiffpeX::round(uint32_t f, detail::message_span_type<ElType> message)
     {
-        size_t tweak_len = sizeof(ElType) * _digits;
-        size_t tweak_padded_blocks = (tweak_len + aes_engine_type::block_size - 1)
-                                   / aes_engine_type::block_size;
         for(int i=0; i<_digits; ++i)
         {
             int j = Inverse
@@ -63,18 +60,18 @@ namespace riffpe
                   : i;
             auto& perm = dynamic_cast<RifflePerm<ElType>&>(*_perms[j]);
             auto aes_state = _aes_state_template;
-            ElType x = message[j];
-            message[j] = f;
-            message[_digits] = j;
+            ElType x = message.data.as_elems[j];
+            message.data.as_elems[j] = f;
+            message.data.as_elems[_digits] = j;
             // Absorb the message view (+f marker) as the rest of tweak into the AES state
             // This is equivalent to computing CBC-MAC into aes_state.
-            _aes_engine->encrypt_cbc(reinterpret_cast<const uint8_t*>(message), nullptr, 
-                                     tweak_padded_blocks, aes_state.data());
+            _aes_engine->encrypt_cbc(message.data.as_bytes, nullptr, 
+                                     message.byte_size / aes_engine_type::block_size, aes_state.data());
             perm.recompute(aes_state);
             if constexpr (Inverse)
-                message[j] = perm.reverse(x);
+                message.data.as_elems[j] = perm.reverse(x);
             else
-                message[j] = perm.forward(x);
+                message.data.as_elems[j] = perm.forward(x);
         }
     }
 

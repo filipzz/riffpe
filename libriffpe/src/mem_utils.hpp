@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace riffpe
@@ -58,6 +59,12 @@ namespace riffpe
             container.push_back(extract_byte<5>(value));
             container.push_back(extract_byte<6>(value));
             container.push_back(extract_byte<7>(value));
+        }
+
+        template<typename ByteContainer>
+        constexpr inline void push_pkcs7_padding(ByteContainer& container, size_t block_size = 16u) {
+            uint8_t padding_byte = int(block_size) + (-int(container.size()) % int(block_size));
+            container.insert(container.end(), padding_byte, padding_byte);
         }
     }
 }

@@ -35,13 +35,13 @@ Message encryption:
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 1234123456785678
-3123769254898119
+5158543106053628
 ```
 
 Message decryption:
 
 ```bash
-$ python -m riffpe.decrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 3123769254898119
+$ python -m riffpe.decrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 5158543106053628
 1234123456785678
 ```
 
@@ -50,17 +50,17 @@ may be requested by providing `-B` switch:
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 1234123456785678
-3123769254898119
+5158543106053628
 
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 7856785634123412 -B
-1981895492762331
+2836050631545851
 ```
 
-**Note**: `3594761421525475` is `7554522114769435` in reverse (in chunks of 2 digits, since $n=100$), just as `7856785634123412` is `1234123456785678`.
+**Note**: `5158543106053628` is `2836050631545851` in reverse (in chunks of 2 digits, since $n=100$), just as `7856785634123412` is `1234123456785678`.
 
 ```bash
 $ python -m riffpe.encrypt -k 00112233445566778899aabbccddeeff -n 100 -l 8 7766554433221100 -t 416C696365
-2601183984852660
+4744161879108363
 ```
 
 Currently tag (`-t`) must be passed as a hex string.
@@ -91,7 +91,7 @@ print("ptx:", ptx)
 Output:
 
 ```python
-ctx: [19, 81, 89, 54, 92, 76, 23, 31]
+ctx: [28, 36, 5, 6, 31, 54, 58, 51]
 ptx: [78, 56, 78, 56, 34, 12, 34, 12]
 ```
 
