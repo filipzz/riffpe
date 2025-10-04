@@ -20,7 +20,7 @@ public:
 
 protected:
     constexpr static size_t bucket_count = BucketCount;
-    constexpr static size_t bkey_shift = 8 - std::log2(bucket_count);
+    constexpr static size_t bkey_div = 256 / bucket_count;
     std::array<std::vector<element_type>, bucket_count> _buckets;
     // bucket_count must be a power of 2
     static_assert(!(bucket_count & (bucket_count-1)));
@@ -32,7 +32,7 @@ public:
         uint8_t bkey = key[0];
         bytes_view nkey;
         if constexpr (bucket_count <= 256) {
-            bkey >>= bkey_shift;
+            bkey /= bkey_div;
             nkey = key;
         } else {
             nkey = key.substr(1);
