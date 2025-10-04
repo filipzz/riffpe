@@ -12,7 +12,7 @@ standard_unit = 'us'
 
 re_dataset = re.compile(r"Dataset (\[[^\]]+\]) (.+)")
 re_average = re.compile(r"average ((en|de)crypt) time: (.+?)ns")
-re_riffpe = re.compile(r"Riffpe\((\d+), (\d+)\) (.+)")
+re_riffpe = re.compile(r"Riffpe\((\d+), (\d+), (\d+)-bits\) (.+)")
 
 with open(ifname, 'r') as f:
     curr_dataset = None
@@ -29,7 +29,7 @@ with open(ifname, 'r') as f:
             # Collapse common Riffpe configurations
             m_riffpe = re_riffpe.match(curr_impl)
             if m_riffpe:
-                curr_impl = f"Riffpe(n={m_riffpe.group(1)}) {m_riffpe.group(3)}"
+                curr_impl = f"Riffpe(n={m_riffpe.group(1)}, bits={m_riffpe.group(3)}) {m_riffpe.group(4)}"
         elif m_average:
             try:
                 tentry = matrix[curr_impl]
@@ -105,5 +105,5 @@ def print_array(array, col_lens, heading):
         print(' | '.join(s.ljust(l) for s, l in zip(row, col_lens)))
 
 
-print_array(enc_array, enc_col_lens, "**Encryption time**")
-print_array(dec_array, dec_col_lens, "**Decryption time**")
+print_array(enc_array, enc_col_lens, "#### Encryption time")
+print_array(dec_array, dec_col_lens, "#### Decryption time")

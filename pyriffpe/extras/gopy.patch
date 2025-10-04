@@ -1,0 +1,81 @@
+diff --git a/bind/gen.go b/bind/gen.go
+index 05fd70e..4d4d243 100644
+--- a/bind/gen.go
++++ b/bind/gen.go
+@@ -52,7 +52,9 @@ package main
+ %[3]s
+ // #define Py_LIMITED_API // need full API for PyRun*
+ #include <Python.h>
++#if !defined(__STDC_VERSION__) || (__STDC_VERSION__ < 202311L)
+ typedef uint8_t bool;
++#endif
+ // static inline is trick for avoiding need for extra .c file
+ // the following are used for build value -- switch on reflect.Kind
+ // or the types equivalent
+@@ -410,7 +412,7 @@ build:
+ 	$(GOIMPORTS) -w %[1]s.go
+ 	# this will otherwise be built during go build and may be out of date
+ 	- rm %[1]s.c 
+-	echo "typedef uint8_t bool;" > %[1]s_go.h
++	printf "#if !defined(__STDC_VERSION__) || (__STDC_VERSION__ < 202311L)\ntypedef uint8_t bool;\n#endif\n" > %[1]s_go.h
+ 	# this will fail but is needed to generate the .c file that then allows go build to work
+ 	- $(PYTHON) build.py >/dev/null 2>&1
+ 	# generate %[1]s_go.h from %[1]s.go -- unfortunately no way to build .h only
+diff --git a/cmd_build.go b/cmd_build.go
+index 6c63dff..24b0191 100644
+--- a/cmd_build.go
++++ b/cmd_build.go
+@@ -125,7 +125,7 @@ func runBuild(mode bind.BuildMode, cfg *BuildCfg) error {
+ 
+ 	if mode == bind.ModeExe {
+ 		of, err := os.Create(buildname + ".h") // overwrite existing
+-		fmt.Fprintf(of, "typedef uint8_t bool;\n")
++		fmt.Fprintf(of, "#if !defined(__STDC_VERSION__) || (__STDC_VERSION__ < 202311L)\ntypedef uint8_t bool;\n#endif\n")
+ 		of.Close()
+ 
+ 		fmt.Printf("%v build.py   # will fail, but needed to generate .c file\n", cfg.VM)
+diff --git a/go.mod b/go.mod
+index 673ca25..0f31b04 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,12 +1,15 @@
+ module github.com/go-python/gopy
+ 
+-go 1.19
++go 1.22.0
+ 
+ require (
+ 	github.com/gonuts/commander v0.1.0
+ 	github.com/gonuts/flag v0.1.0
+ 	github.com/pkg/errors v0.9.1
+-	golang.org/x/tools v0.16.0
++	golang.org/x/tools v0.26.0
+ )
+ 
+-require golang.org/x/mod v0.14.0 // indirect
++require (
++	golang.org/x/mod v0.21.0 // indirect
++	golang.org/x/sync v0.8.0 // indirect
++)
+diff --git a/go.sum b/go.sum
+index fe0b52c..7f1f86f 100644
+--- a/go.sum
++++ b/go.sum
+@@ -4,11 +4,9 @@ github.com/gonuts/flag v0.1.0 h1:fqMv/MZ+oNGu0i9gp0/IQ/ZaPIDoAZBOBaJoV7viCWM=
+ github.com/gonuts/flag v0.1.0/go.mod h1:ZTmTGtrSPejTo/SRNhCqwLTmiAgyBdCkLYhHrAoBdz4=
+ github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+-github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
+-golang.org/x/mod v0.14.0 h1:dGoOF9QVLYng8IHTm7BAyWqCqSheQ5pYWGhzW00YJr0=
+-golang.org/x/mod v0.14.0/go.mod h1:hTbmBsO62+eylJbnUtE2MGJUyE7QWk4xUqPFrRgJ+7c=
+-golang.org/x/net v0.19.0/go.mod h1:CfAk/cbD4CthTvqiEl8NpboMuiuOYsAr/7NOjZJtv1U=
+-golang.org/x/sync v0.5.0 h1:60k92dhOjHxJkrqnwsfl8KuaHbn/5dl0lUPUklKo3qE=
+-golang.org/x/sync v0.5.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
+-golang.org/x/tools v0.16.0 h1:GO788SKMRunPIBCXiQyo2AaexLstOrVhuAL5YwsckQM=
+-golang.org/x/tools v0.16.0/go.mod h1:kYVVN6I1mBNoB1OX+noeBjbRk4IUEPa7JJ+TJMEooJ0=
++golang.org/x/mod v0.21.0 h1:vvrHzRwRfVKSiLrG+d4FMl/Qi4ukBCE6kZlTUkDYRT0=
++golang.org/x/mod v0.21.0/go.mod h1:6SkKJ3Xj0I0BrPOZoBy3bdMptDDU9oJrpohJ3eWZ1fY=
++golang.org/x/sync v0.8.0 h1:3NFvSEYkUoMifnESzZl15y791HH1qU2xm6eCJU5ZPXQ=
++golang.org/x/sync v0.8.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=
++golang.org/x/tools v0.26.0 h1:v/60pFQmzmT9ExmjDv2gGIfi3OqfKoEP6I5+umXlbnQ=
++golang.org/x/tools v0.26.0/go.mod h1:TPVVj70c7JJ3WCazhD8OdXcZg/og+b9+tH/KxylGwH0=

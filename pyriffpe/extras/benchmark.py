@@ -53,7 +53,7 @@ except ImportError:
     tqdm = lambda x: x
 
 
-BENCHMARK_PYTHON = False
+BENCHMARK_PYTHON = True
 BENCHMARK_NATIVE = True
 
 BENCHMARK_TAG = bytes.fromhex("0011223344556677")
