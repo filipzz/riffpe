@@ -3,7 +3,7 @@ import random
 import sys
 import time
 
-from typing import List
+from typing import Sequence
 
 import riffpe
 import riffpe._fallback
@@ -64,7 +64,10 @@ def _benchmark_common(dataset, label: str, descr: str, encode, encrypt, decrypt)
     print("Dataset", label, descr)
     total_encrypt_time = 0
     total_decrypt_time = 0
-    for entry in tqdm(dataset):
+    pb = tqdm(dataset)
+    if pb is not dataset:
+        pb.set_description(f"{label}:{descr}")
+    for entry in pb:
         input = encode(entry)
         ts_a = time.perf_counter_ns()
         ctx = encrypt(input)
@@ -171,7 +174,7 @@ def benchmark_go_ff3(dataset, ndigits, label):
                       fpe.Encrypt, fpe.Decrypt)
 
 
-def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: List[int]):
+def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: Sequence[int], ns: Sequence[int]):
     # Python impls
     benchmark_pyffx(dataset, ndigits, label)
     benchmark_ff3(dataset, ndigits, label)
@@ -201,6 +204,8 @@ def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: 
             benchmark_riffpex(dataset, ndigits, th, label, True)
 
 
+DEFAULT_DATASET_LENGTH = 10_000
+
 # Benchmark dataset 1: full credit card numbers [16-digit base10 integers]
 # Riffpe configurations under test:
 #  * n=10, l=16 (potentially insecure)
@@ -212,7 +217,7 @@ def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: 
 #  * n >= 32 (50, 50, 50, 50, 50, 50, 80, 80, 100)
 #  * n >= 50 (50, 50, 50, 50, 50, 50, 80, 80, 100)
 
-BENCHMARK_DATASET_1_LENGTH = 100_000
+BENCHMARK_DATASET_1_LENGTH = DEFAULT_DATASET_LENGTH
 
 BENCHMARK_DATASET_1 = [
     random.randrange(10000_0000_0000_0000)
@@ -233,7 +238,7 @@ all_benchmarks_for_dataset(BENCHMARK_DATASET_1, "[16-digit base10 integers]", 16
 #  * n >= 32 (100, 100, 100)
 #  * n >= 50 (100, 100, 100)
 
-BENCHMARK_DATASET_2_LENGTH = 100_000
+BENCHMARK_DATASET_2_LENGTH = DEFAULT_DATASET_LENGTH
 
 BENCHMARK_DATASET_2 = [
     random.randrange(1000_000)
@@ -253,7 +258,7 @@ all_benchmarks_for_dataset(BENCHMARK_DATASET_2, "[6-digit base10 integers]", 6, 
 #  * n >= 32 (50, 50, 50, 80, 100)
 #  * n >= 50 (50, 50, 50, 80, 100)
 
-BENCHMARK_DATASET_3_LENGTH = 100_000
+BENCHMARK_DATASET_3_LENGTH = DEFAULT_DATASET_LENGTH
 
 BENCHMARK_DATASET_3 = [
     random.randrange(1000_000_000)

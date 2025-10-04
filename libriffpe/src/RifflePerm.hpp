@@ -76,25 +76,43 @@ namespace riffpe
         inline void recompute(aes_state_type& prng_iv) override
         {
             _aes_engine.encrypt_cbc(nullptr, _perm_state.data(), _perm_msg_len_blocks, prng_iv.data());
+            auto b = _permutation.begin();
+            auto it = b;
             for(ElType i = 0; i < _elements; ++i)
             {
-                _permutation[i] = { {_perm_state.data() + i*_perm_bytes_per_value, _perm_bytes_per_value}, i };
+                *it++ = { {_perm_state.data() + i*_perm_bytes_per_value, _perm_bytes_per_value}, i };
             }
-            std::sort(_permutation.begin(), _permutation.end());
         }
 
         inline ElType forward(ElType x) override
         {
-            return std::get<1>(_permutation[x]);
+            // Quick select
+            auto b = _permutation.begin(), e = _permutation.end(), n = b + x;
+            std::nth_element(b, n, e);
+            return std::get<1>(*n);
         }
 
         inline ElType reverse(ElType x) override
         {
-            ElType y = 0;
-            for(ElType i = 0; i<_elements; ++i)
-                if(std::get<1>(_permutation[i]) == x)
-                    y = i;
-            return y;
+            // Simple rank select
+            auto b = _permutation.begin(), e = _permutation.end(), n = b + x;
+            #pragma unlikely
+            if(std::get<1>(*n) != x)
+            {
+                // This is only possible if the perm has been used in the forwad configuration before
+                // which means we might want to split forward and backward perm implementation.
+                for(auto it = b; it < e; ++it)
+                    if(std::get<1>(*it) == x) {
+                        n = it;
+                        break;
+                    }
+            }
+            ElType rank = 0;
+            for(auto it = b; it < e; ++it)
+            {
+                if(*it < *n) rank ++;
+            }
+            return rank;
         }
 
     };
