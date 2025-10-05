@@ -15,7 +15,7 @@ namespace riffpe
     class RiffpeX
     {
     protected:
-        const std::vector<uint32_t> _cs;
+        const std::vector<uint32_t> _radices;
         const uint32_t _digits;
         const uint32_t _bytes_per_value;
         
@@ -34,7 +34,10 @@ namespace riffpe
         void enc_dec_impl(std::vector<uint32_t>& message);
 
     public:
-        RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value = 16);
+        RiffpeX(uint32_t* radices_begin, uint32_t* radices_end,
+                const uint8_t* key, size_t key_length,
+                const uint8_t* tweak, size_t tweak_length,
+                uint32_t bytes_per_value = 16);
         RiffpeX(RiffpeX&&);
         ~RiffpeX();
 

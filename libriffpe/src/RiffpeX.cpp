@@ -15,15 +15,15 @@ namespace riffpe
 {
     using aes_engine_type = crypto::AESEngine;
 
-    RiffpeX::RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value)
-        : _cs(c_begin, c_end), _digits(c_end - c_begin), _bytes_per_value(bytes_per_value), _aes_engine(aes_engine_type::engine_factory())
+    RiffpeX::RiffpeX(uint32_t* radices_begin, uint32_t* radices_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value)
+        : _radices(radices_begin, radices_end), _digits(radices_end - radices_begin), _bytes_per_value(bytes_per_value), _aes_engine(aes_engine_type::engine_factory())
     {
-        uint32_t maxc = *std::max_element(c_begin, c_end);
+        uint32_t maxc = *std::max_element(radices_begin, radices_end);
         _el_size = detail::_validate_params(maxc, _digits);
 
         std::vector<uint8_t> _tweak_buf((sizeof(maxc) + 1) * _digits + tweak_length);
         uint8_t* uptr = _tweak_buf.data();
-        for(const uint32_t& c : _cs)  // _validate_params ensures there is at least one element in _cs
+        for(const uint32_t& c : _radices)  // _validate_params ensures there is at least one element in _cs
         {
             util::store_u32_le(uptr, c);
             uptr[4] = ':';
@@ -42,7 +42,7 @@ namespace riffpe
         std::memset(_aes_state_template.data(), 0, aes_engine_type::block_size);
         _aes_engine->encrypt_cbc(_tweak_buf.data(), nullptr, _tweak_buf.size() / aes_engine_type::block_size, _aes_state_template.data());
 
-        for(auto c : _cs) {
+        for(auto c : _radices) {
             _perms_fwd.emplace_back(RifflePermBase::make_unique_fwd(_el_size, _bytes_per_value, c, *_aes_engine));
             _perms_rev.emplace_back(RifflePermBase::make_unique_rev(_el_size, _bytes_per_value, c, *_aes_engine));
         }

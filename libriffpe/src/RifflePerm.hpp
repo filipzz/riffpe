@@ -30,8 +30,7 @@ namespace riffpe
     protected:
         using typename RifflePermBase::aes_engine_type;
         using typename RifflePermBase::aes_state_type;
-        using bytes_view = typename radix_tree<ElType>::bytes_view;
-        using permutation_element = typename radix_tree<ElType>::element_type;
+        using permutation_element = typename radix_tree<ElType, bytes_view>::element_type;
 
         uint32_t _elements;
         aes_engine_type& _aes_engine;
@@ -68,8 +67,7 @@ namespace riffpe
     protected:
         using typename RifflePermBase::aes_engine_type;
         using typename RifflePermBase::aes_state_type;
-        using bytes_view = typename radix_tree<ElType>::bytes_view;
-        using permutation_element = typename radix_tree<ElType>::element_type;
+        using permutation_element = typename radix_tree<ElType, bytes_view>::element_type;
 
         using RifflePermCommon<ElType>::_aes_engine;
         using RifflePermCommon<ElType>::_perm_state;
@@ -77,7 +75,7 @@ namespace riffpe
         using RifflePermCommon<ElType>::_perm_bytes_per_value;
         using RifflePermCommon<ElType>::_elements;
 
-        radix_tree<ElType> _fwd_permutation;
+        radix_tree<ElType, bytes_view> _fwd_permutation;
     public:
         RifflePermFwd(
             uint32_t elements,
@@ -102,8 +100,7 @@ namespace riffpe
     protected:
         using typename RifflePermBase::aes_engine_type;
         using typename RifflePermBase::aes_state_type;
-        using bytes_view = typename radix_tree<ElType>::bytes_view;
-        using permutation_element = typename radix_tree<ElType>::element_type;
+        using permutation_element = typename radix_tree<ElType, bytes_view>::element_type;
 
         using RifflePermCommon<ElType>::_aes_engine;
         using RifflePermCommon<ElType>::_perm_state;

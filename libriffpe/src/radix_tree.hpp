@@ -10,17 +10,22 @@
 #include <string_view>
 
 #include <cstdint>
-#include <cmath>
 
-template<typename ElType, size_t BucketCount = (sizeof(ElType) == 1) ? 16 : 256>
+using bytes_view = std::basic_string_view<uint8_t>;
+
+template<
+    typename ElType,
+    typename KeyType,
+    size_t BucketCount = (sizeof(ElType) == 1) ? 16 : 256
+>
 class radix_tree {
 public:
-    using bytes_view = std::basic_string_view<uint8_t>;
+    using key_type = KeyType;
     using element_type = std::tuple<bytes_view, ElType>;
 
 protected:
     constexpr static size_t bucket_count = BucketCount;
-    constexpr static size_t bkey_div = 256 / bucket_count;
+    constexpr static size_t bkey_div = (1 << (sizeof(typename key_type::value_type) * 8)) / bucket_count;
     std::array<std::vector<element_type>, bucket_count> _buckets;
     // bucket_count must be a power of 2
     static_assert(!(bucket_count & (bucket_count-1)));
@@ -30,14 +35,8 @@ public:
 
     void insert(bytes_view key, ElType element) {
         uint8_t bkey = key[0];
-        bytes_view nkey;
-        if constexpr (bucket_count <= 256) {
-            bkey /= bkey_div;
-            nkey = key;
-        } else {
-            nkey = key.substr(1);
-        }
-        _buckets[bkey].emplace_back(nkey, element);
+        bkey /= bkey_div;
+        _buckets[bkey].emplace_back(key, element);
     }
 
     void clear() {

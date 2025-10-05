@@ -34,7 +34,10 @@ namespace riffpe
         void enc_dec_impl(std::vector<uint32_t>& message);
 
     public:
-        Riffpe(uint32_t c, uint32_t l, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value = 1);
+        Riffpe(uint32_t radix, uint32_t digits,
+               const uint8_t* key, size_t key_length,
+               const uint8_t* tweak, size_t tweak_length,
+               uint32_t bytes_per_value = 16);
         Riffpe(Riffpe&&);
         ~Riffpe();
 
