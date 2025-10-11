@@ -48,17 +48,64 @@ namespace riffpe
                 v3 = _mm_xor_si128 (v3, v2);
             }
 
+            template<size_t round_count>
             inline static void do_aes_enc_transform(
                 __m128i& state,
-                std::array<__m128i, 15>& key,
-                size_t round_count)
-            {
-                state = _mm_xor_si128(state, key[0]);
-                #pragma unroll
-                for (size_t i=1; i<round_count; ++i) {
-                    state = _mm_aesenc_si128(state, key[i]);
+                const __m128i* key
+            ) {
+                state = _mm_xor_si128(state, *key++);
+                if constexpr (round_count == 14) {
+                    state = _mm_aesenc_si128(state, *key++);
+                    state = _mm_aesenc_si128(state, *key++);
                 }
-                state = _mm_aesenclast_si128(state, key[round_count]);
+                if constexpr (round_count >= 12) {
+                    state = _mm_aesenc_si128(state, *key++);
+                    state = _mm_aesenc_si128(state, *key++);
+                }
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenc_si128(state, *key++);
+                state = _mm_aesenclast_si128(state, *key);
+            }
+        
+            template<size_t round_count>
+            inline static void encrypt_ecb_loop(
+                const uint8_t* in, uint8_t* out, size_t block_count, const __m128i* key_begin
+            ) {
+                __m128i aes_state;
+                for(int i=0; i<block_count; ++i)
+                {
+                    aes_state = loadu_mm128i(in);
+                    in += 16;
+                    do_aes_enc_transform<round_count>(aes_state, key_begin);
+                    storeu_mm128i(out, aes_state);
+                    out += 16;
+                }
+            }
+
+            template<size_t round_count>
+            inline static void encrypt_cbc_loop(
+                const uint8_t* in, uint8_t* out, size_t block_count, const __m128i* key_begin, uint8_t* state
+            ) { 
+                __m128i cbc_state = loadu_mm128i(state);
+                for(int i=0; i<block_count; ++i) {
+                    if(in) {
+                        cbc_state = _mm_xor_si128(cbc_state, loadu_mm128i(in));
+                        in += 16;
+                    }
+                    do_aes_enc_transform<round_count>(cbc_state, key_begin);
+                    if(out) {
+                        storeu_mm128i(out, cbc_state);
+                        out += 16;
+                    }
+                }
+                storeu_mm128i(state, cbc_state);
             }
         }
 
@@ -179,14 +226,11 @@ namespace riffpe
                 throw std::invalid_argument(oss.str());
             }
             
-            __m128i aes_state;
-            for(int i=0; i<block_count; ++i)
-            {
-                aes_state = loadu_mm128i(in);
-                in += 16;
-                do_aes_enc_transform(aes_state, _key, _round_count);
-                storeu_mm128i(out, aes_state);
-                out += 16;
+            switch(_round_count) {
+                case 10: return encrypt_ecb_loop<10>(in, out, block_count, _key.data());
+                case 12: return encrypt_ecb_loop<12>(in, out, block_count, _key.data());
+                case 14: return encrypt_ecb_loop<14>(in, out, block_count, _key.data());
+                default: /* unreachable */ return;
             }
         }
 
@@ -202,26 +246,13 @@ namespace riffpe
                 throw std::invalid_argument(oss.str());
             }
             
-            __m128i cbc_state;
-
-            cbc_state = loadu_mm128i(state);
-
-            for(int i=0; i<block_count; ++i)
-            {
-                if(in)
-                {
-                    cbc_state = _mm_xor_si128(cbc_state, loadu_mm128i(in));
-                    in += 16;
-                }
-                do_aes_enc_transform(cbc_state, _key, _round_count);
-                if(out)
-                {
-                    storeu_mm128i(out, cbc_state);
-                    out += 16;
-                }
+            switch(_round_count) {
+                case 10: return encrypt_cbc_loop<10>(in, out, block_count, _key.data(), state);
+                case 12: return encrypt_cbc_loop<12>(in, out, block_count, _key.data(), state);
+                case 14: return encrypt_cbc_loop<14>(in, out, block_count, _key.data(), state);
+                default: /* unreachable */ return;
             }
-            
-            storeu_mm128i(state, cbc_state);
+
         }
     }
 }
