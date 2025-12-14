@@ -26,7 +26,8 @@ check_cxx_source_compiles("#include \"${CMAKE_CURRENT_LIST_DIR}/test_sources/det
 set (CMAKE_REQUIRED_FLAGS ${ORIG_CMAKE_REQUIRED_FLAGS})
 
 # Default to -march=native if available
-if (RIFFPE_CXX_FLAG_MARCH_NATIVE_AVAILABLE)
+# EXCEPT on ARM (IIUC on aarch64 it defaults to a baseline without extensions)
+if (RIFFPE_CXX_FLAG_MARCH_NATIVE_AVAILABLE AND NOT (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$"))
   list (APPEND RIFFPE_OPT_FLAGS "-march=native")
 endif ()
 
@@ -34,3 +35,4 @@ endif ()
 if (RIFFPE_CXX_FLAG_MTUNE_NATIVE_AVAILABLE)
   list (APPEND RIFFPE_OPT_FLAGS "-mtune=native")
 endif ()
+

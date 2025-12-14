@@ -1,4 +1,4 @@
-#include <riffpe/AESEngine.hpp>
+#include "../include/riffpe/AESEngine.hpp"
 
 #if RIFFPE_HAVE_AESNI
 #include "x86_utils.hpp"

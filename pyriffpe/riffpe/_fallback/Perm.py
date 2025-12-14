@@ -1,4 +1,37 @@
+from typing import Optional
 from .._common.TweakablePRNG import TweakablePRNG
+
+
+def _partition(lst: list, begin, end):
+    count = end - begin
+    if count == 0:
+        raise ValueError("_partition called on an empty range")
+    x = lst[end-1] 
+    i = begin
+    for j in range(i, end-1): 
+        if lst[j] <= x: 
+            lst[i], lst[j] = lst[j], lst[i] 
+            i += 1
+    lst[i], lst[end-1] = x, lst[i] 
+    return i 
+
+def _nth_element(lst: list, n: int, begin: int = 0, end: Optional[int] = None):
+    if end is None:
+        end = len(lst)
+    if end - begin <= 25:
+        tmp = lst[begin:end]
+        tmp.sort()
+        # If we want we can lst[begin:end] = tmp
+        # but it's not required in this case
+        return tmp[n-begin]
+    else:
+        pivot = _partition(lst, begin, end)
+        if n < pivot:  # Recurse left
+            return _nth_element(lst, n, begin, pivot)
+        elif pivot < n:  # Recurse right
+            return _nth_element(lst, n, pivot + 1, end)
+        else:
+            return lst[pivot] 
 
 
 class Perm:
@@ -9,9 +42,9 @@ class Perm:
 
     def perm(self, prng: TweakablePRNG, x: int, inv: bool):
         """
-        For a given key and iv, generates self.c elements that are encrypted and then sorted.
-        In this way a permutation of c elements is obtained (this is in fact Riffle Shuffle).
-        :param iv: 
+        For a given `prng`, generates `self.elements` elements that are encrypted and then sorted.
+        In this way a permutation of `self.elements` elements is obtained (this is in fact Riffle Shuffle).
+        :param prng: 
         :param x: 
         :param inv: 
         :return: 
@@ -26,12 +59,18 @@ class Perm:
         stream = prng.get_bytes(msg_len_padded)
         cipher_value_pairs = [(stream[idx * self.bytes_per_value:(idx + 1) * self.bytes_per_value], idx)
                               for idx in range(self.elements)]
-        cipher_value_pairs.sort()
 
         if not inv:
+            # Quick select
+            # return _nth_element(cipher_value_pairs, x)[1]
+            # Apparently the naive solution is still faster:
+            cipher_value_pairs.sort()
             return cipher_value_pairs[x][1]
         else:
-            for i, (_, y) in enumerate(cipher_value_pairs):
-                if y == x:
-                    return i
-            raise RuntimeError
+            n = cipher_value_pairs[x]
+            # rank = sum(1 for it in cipher_value_pairs if it < n)
+            rank = 0
+            for it in cipher_value_pairs:
+                if it < n:
+                    rank += 1
+            return rank

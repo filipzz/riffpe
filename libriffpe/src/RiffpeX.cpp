@@ -1,30 +1,29 @@
-#include <riffpe/RiffpeX.hpp>
-#include <riffpe/AESEngine.hpp>
+#include "../include/riffpe/RiffpeX.hpp"
+#include "../include/riffpe/AESEngine.hpp"
+
+#include <algorithm>
+#include <vector>
+
+#include <cstring>
 
 #include "RifflePerm.hpp"
 #include "riffpe_detail.hpp"
 #include "riffpe_detail.hpp"
 #include "mem_utils.hpp"
 
-#include <algorithm>
-#include <stdexcept>
-#include <vector>
-
-#include <cstring>
-
 namespace riffpe
 {
     using aes_engine_type = crypto::AESEngine;
 
-    RiffpeX::RiffpeX(uint32_t* c_begin, uint32_t* c_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value)
-        : _cs(c_begin, c_end), _digits(c_end - c_begin), _bytes_per_value(bytes_per_value), _aes_engine(aes_engine_type::engine_factory())
+    RiffpeX::RiffpeX(uint32_t* radices_begin, uint32_t* radices_end, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value)
+        : _radices(radices_begin, radices_end), _digits(radices_end - radices_begin), _bytes_per_value(bytes_per_value), _aes_engine(aes_engine_type::engine_factory())
     {
-        uint32_t maxc = *std::max_element(c_begin, c_end);
+        uint32_t maxc = *std::max_element(radices_begin, radices_end);
         _el_size = detail::_validate_params(maxc, _digits);
 
         std::vector<uint8_t> _tweak_buf((sizeof(maxc) + 1) * _digits + tweak_length);
         uint8_t* uptr = _tweak_buf.data();
-        for(const uint32_t& c : _cs)  // _validate_params ensures there is at least one element in _cs
+        for(const uint32_t& c : _radices)  // _validate_params ensures there is at least one element in _cs
         {
             util::store_u32_le(uptr, c);
             uptr[4] = ':';
@@ -43,8 +42,10 @@ namespace riffpe
         std::memset(_aes_state_template.data(), 0, aes_engine_type::block_size);
         _aes_engine->encrypt_cbc(_tweak_buf.data(), nullptr, _tweak_buf.size() / aes_engine_type::block_size, _aes_state_template.data());
 
-        for(auto c : _cs)
-            _perms.emplace_back(RifflePermBase::make_unique(_el_size, _bytes_per_value, c, *_aes_engine));
+        for(auto c : _radices) {
+            _perms_fwd.emplace_back(RifflePermBase::make_unique_fwd(_el_size, _bytes_per_value, c, *_aes_engine));
+            _perms_rev.emplace_back(RifflePermBase::make_unique_rev(_el_size, _bytes_per_value, c, *_aes_engine));
+        }
     }
 
     RiffpeX::RiffpeX(RiffpeX&&) = default;
@@ -58,7 +59,6 @@ namespace riffpe
             int j = Inverse
                   ? (_digits - i - 1)
                   : i;
-            auto& perm = dynamic_cast<RifflePerm<ElType>&>(*_perms[j]);
             auto aes_state = _aes_state_template;
             ElType x = message.data.as_elems[j];
             message.data.as_elems[j] = f;
@@ -67,11 +67,13 @@ namespace riffpe
             // This is equivalent to computing CBC-MAC into aes_state.
             _aes_engine->encrypt_cbc(message.data.as_bytes, nullptr, 
                                      message.byte_size / aes_engine_type::block_size, aes_state.data());
-            perm.recompute(aes_state);
-            if constexpr (Inverse)
-                message.data.as_elems[j] = perm.reverse(x);
-            else
-                message.data.as_elems[j] = perm.forward(x);
+            if constexpr (Inverse) {
+                auto& perm = dynamic_cast<RifflePermRev<ElType>&>(*_perms_rev[j]);
+                message.data.as_elems[j] = perm.reverse(aes_state, x);
+            } else {
+                auto& perm = dynamic_cast<RifflePermFwd<ElType>&>(*_perms_fwd[j]);
+                message.data.as_elems[j] = perm.forward(aes_state, x);
+            }
         }
     }
 

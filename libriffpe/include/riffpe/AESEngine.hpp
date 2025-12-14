@@ -1,9 +1,7 @@
 #pragma once
 
-#include <array>
-#include <memory>
-
 #include <cstdint>
+#include <cstddef>
 
 namespace riffpe
 {

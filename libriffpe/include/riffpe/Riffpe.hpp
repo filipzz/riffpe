@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -19,7 +20,8 @@ namespace riffpe
         const uint32_t _bytes_per_value;
         
         uint32_t _el_size;
-        std::unique_ptr<RifflePermBase> _perm;
+        std::unique_ptr<RifflePermBase> _perm_fwd;
+        std::unique_ptr<RifflePermBase> _perm_rev;
 
         using aes_engine_type = crypto::AESEngine;
         using aes_engine_ptr  = std::unique_ptr<aes_engine_type>;
@@ -32,7 +34,10 @@ namespace riffpe
         void enc_dec_impl(std::vector<uint32_t>& message);
 
     public:
-        Riffpe(uint32_t c, uint32_t l, const uint8_t* key, size_t key_length, const uint8_t* tweak, size_t tweak_length, uint32_t bytes_per_value = 1);
+        Riffpe(uint32_t radix, uint32_t digits,
+               const uint8_t* key, size_t key_length,
+               const uint8_t* tweak, size_t tweak_length,
+               uint32_t bytes_per_value = 16);
         Riffpe(Riffpe&&);
         ~Riffpe();
 
