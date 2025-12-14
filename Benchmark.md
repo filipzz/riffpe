@@ -293,3 +293,63 @@ RiffpeX(n>=16) [native]           | (same as n>=25)           | (same as n>=25) 
 RiffpeX(n>=25) [native]           | 3.665733 us               | 5.549970 us                  | 8.935720 us
 RiffpeX(n>=50) [native]           | 7.372530 us               | 8.531533 us                  | 14.040910 us
 
+
+## Test platform 5
+
+```
+CPU: INTEL(R) XEON(R) GOLD 6548Y+
+RAM: 1TB
+```
+
+#### Encryption time
+Implementation                    | [6-digit base10 integers]    | [9-digit base10 integers]    | [16-digit base10 integers]
+----------------------------------|------------------------------|------------------------------|---------------------------
+pyffx                             | 26.478382 us                 | 28.600857 us                 | 39.176199 us              
+FF3 [Python]                      | 24.831804 us                 | 29.217218 us                 | 40.095383 us              
+Riffpe(n=10, bits=128) [Python]   | 71.823785 us                 | 107.655898 us                | 188.132250 us             
+Riffpe(n=10, bits=256) [Python]   | 74.456805 us                 | 111.093605 us                | 196.268914 us             
+Riffpe(n=100, bits=128) [Python]  | 145.212553 us                | *N/A*                        | 383.684576 us             
+Riffpe(n=100, bits=256) [Python]  | 154.461201 us                | *N/A*                        | 411.301654 us             
+RiffpeX(n>=16) [Python]           | *N/A*                        | *N/A*                        | 190.833926 us             
+RiffpeX(n>=25) [Python]           | 81.878578 us                 | 122.950456 us                | 208.294153 us             
+RiffpeX(n>=50) [Python]           | 143.984033 us                | 169.215109 us                | 289.362936 us             
+FF1 [Go]                          | 2.796187 us                  | 4.543075 us                  | 2.991075 us               
+FF3 [Go]                          | 4.833251 us                  | 7.909179 us                  | 5.515112 us               
+Riffpe(n=10, bits=128) [native]   | 3.315505 us                  | 7.717045 us                  | 8.412343 us               
+Riffpe(n=10, bits=256) [native]   | 4.302174 us                  | 7.349120 us                  | 11.039188 us              
+Riffpe(n=100, bits=128) [native]  | 26.838601 us                 | *N/A*                        | 69.179410 us              
+Riffpe(n=100, bits=256) [native]  | 31.739854 us                 | *N/A*                        | 82.231671 us              
+RiffpeX(n>=16) [native]           | *N/A*                        | *N/A*                        | 17.198508 us              
+RiffpeX(n>=25) [native]           | 9.825331 us                  | 14.279600 us                 | 22.305598 us              
+RiffpeX(n>=50) [native]           | 26.522209 us                 | 27.045195 us                 | 44.636597 us              
+Riffpe(n=1000, bits=128) [Python] | 1072.015620 us (1.072016 ms) | 1607.471896 us (1.607472 ms) | *N/A*                     
+Riffpe(n=1000, bits=256) [Python] | 1137.794407 us (1.137794 ms) | 1711.760555 us (1.711761 ms) | *N/A*                     
+Riffpe(n=1000, bits=128) [native] | 266.763668 us                | 401.517187 us                | *N/A*                     
+Riffpe(n=1000, bits=256) [native] | 301.613338 us                | 451.312203 us                | *N/A*  
+
+
+#### Decryption time
+Implementation                    | [6-digit base10 integers]    | [9-digit base10 integers]    | [16-digit base10 integers]
+----------------------------------|------------------------------|------------------------------|---------------------------
+pyffx                             | 26.491399 us                 | 28.898710 us                 | 39.548984 us              
+FF3 [Python]                      | 24.907453 us                 | 28.942596 us                 | 39.537928 us              
+Riffpe(n=10, bits=128) [Python]   | 72.787314 us                 | 108.958803 us                | 191.121964 us             
+Riffpe(n=10, bits=256) [Python]   | 76.651766 us                 | 114.567980 us                | 203.506200 us             
+Riffpe(n=100, bits=128) [Python]  | 147.166255 us                | *N/A*                        | 393.931483 us             
+Riffpe(n=100, bits=256) [Python]  | 156.239330 us                | *N/A*                        | 421.916715 us             
+RiffpeX(n>=16) [Python]           | *N/A*                        | *N/A*                        | 197.257581 us             
+RiffpeX(n>=25) [Python]           | 83.335609 us                 | 125.613729 us                | 215.237159 us             
+RiffpeX(n>=50) [Python]           | 146.214167 us                | 173.196948 us                | 297.818082 us             
+FF1 [Go]                          | 2.885318 us                  | 4.638932 us                  | 3.129520 us               
+FF3 [Go]                          | 4.877182 us                  | 8.029456 us                  | 5.466896 us               
+Riffpe(n=10, bits=128) [native]   | 3.259471 us                  | 7.609884 us                  | 8.365069 us               
+Riffpe(n=10, bits=256) [native]   | 4.265693 us                  | 7.284247 us                  | 10.991648 us              
+Riffpe(n=100, bits=128) [native]  | 23.240337 us                 | *N/A*                        | 64.428312 us              
+Riffpe(n=100, bits=256) [native]  | 28.145284 us                 | *N/A*                        | 77.442788 us              
+RiffpeX(n>=16) [native]           | *N/A*                        | *N/A*                        | 15.766533 us              
+RiffpeX(n>=25) [native]           | 8.332429 us                  | 12.503286 us                 | 20.457415 us              
+RiffpeX(n>=50) [native]           | 22.814811 us                 | 23.867226 us                 | 40.880301 us              
+Riffpe(n=1000, bits=128) [Python] | 1116.389468 us (1.116389 ms) | 1674.069057 us (1.674069 ms) | *N/A*                     
+Riffpe(n=1000, bits=256) [Python] | 1182.374738 us (1.182375 ms) | 1778.494243 us (1.778494 ms) | *N/A*                     
+Riffpe(n=1000, bits=128) [native] | 261.092573 us                | 395.415301 us                | *N/A*                     
+Riffpe(n=1000, bits=256) [native] | 296.164701 us                | 445.294767 us                | *N/A*                     
