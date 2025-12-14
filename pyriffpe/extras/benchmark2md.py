@@ -6,7 +6,10 @@ import sys
 if len(sys.argv) != 2:
     print(f"Usage: {sys.argv[0]} <output of benchmark.py>")
 
-ifname = sys.argv[1]
+if sys.argv[1] == '-':
+    ifname = '/dev/stdin'
+else:
+    ifname = sys.argv[1]
 
 standard_unit = 'us'
 

@@ -12,7 +12,7 @@ namespace riffpe
         inline bool has_armneon()
         {
             #if !defined(__ARM_FEATURE_AES) || !defined(__ARM_NEON__)
-            return false
+            return false;
             #else
             return __ARM_NEON__ && __ARM_FEATURE_AES;
             #endif

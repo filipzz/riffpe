@@ -1,8 +1,9 @@
 #include "AESEngineARM64.hpp"
-#include "mem_utils.hpp"
 
 #include <exception>
 #include <sstream>
+
+#include "mem_utils.hpp"
 
 namespace riffpe
 {

@@ -55,4 +55,8 @@ endif()
 
 add_executable(test_aes_engine tests/test_aes_engine.cpp)
 target_link_libraries(test_aes_engine PUBLIC riffpe)
+
+add_executable(test_benchmark tests/test_benchmark.cpp)
+target_link_libraries(test_benchmark PUBLIC riffpe)
+
 # TODO: add more test and install targets

@@ -1,8 +1,9 @@
 #include "AESEngineGeneric.hpp"
-#include "mem_utils.hpp" // load_u32_le , store_u32_le, extract_byte
 
 #include <exception>
 #include <sstream>
+
+#include "mem_utils.hpp" // load_u32_le , store_u32_le, extract_byte
 
 namespace riffpe
 {
