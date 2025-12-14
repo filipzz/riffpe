@@ -204,6 +204,10 @@ Riffpe(n=1000, bits=256) [native] | 260.870285 us                | 398.683427 us
 RiffpeX(n>=16) [native]           | (same as n>=25)              | (same as n>=25)              | 14.433037 us
 RiffpeX(n>=25) [native]           | 7.975489 us                  | 12.011093 us                 | 18.721568 us
 RiffpeX(n>=50) [native]           | 21.834912 us                 | 22.804209 us                 | 37.493107 us
+GraFFX(n=100, FF1)                | 61.038894 us                 | *N/A*                        | 166.882245 us
+GraFFX(n=100, FF3)                | 35.240438 us                 | *N/A*                        | 95.736062 us
+GraFFX(n=1000, FF1)               | 41.757721 us                 | 69.028450 us                 | *N/A*
+GraFFX(n=1000, FF3)               | 26.232256 us                 | 41.222355 us                 | *N/A*
 
 #### Decryption time
 
@@ -231,6 +235,10 @@ Riffpe(n=1000, bits=256) [native] | 240.200814 us                | 377.797873 us
 RiffpeX(n>=16) [native]           | (same as n>=25)              | (same as n>=25)              | 11.922651 us
 RiffpeX(n>=25) [native]           | 6.439258 us                  | 9.757706 us                  | 15.439215 us
 RiffpeX(n>=50) [native]           | 17.153353 us                 | 18.174779 us                 | 30.546182 us
+GraFFX(n=100, FF1)                | 61.174114 us                 | *N/A*                        | 166.859588 us
+GraFFX(n=100, FF3)                | 36.413988 us                 | *N/A*                        | 99.172571 us
+GraFFX(n=1000, FF1)               | 41.785805 us                 | 68.047082 us                 | *N/A*
+GraFFX(n=1000, FF3)               | 27.140874 us                 | 41.770348 us                 | *N/A*
 
 ---
 
