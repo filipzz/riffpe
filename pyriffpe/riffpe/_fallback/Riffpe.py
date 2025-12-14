@@ -5,6 +5,7 @@ from Crypto.Util.Padding import pad
 
 from .Perm import Perm
 from .CBCTweakablePRNG import CBCTweakablePRNG
+from .CTRTweakablePRNG import CTRTweakablePRNG
 
 
 class Riffpe:
@@ -34,7 +35,9 @@ class Riffpe:
 
         self._kdf_el_to_bytes = self._kdf_struct.pack
 
-    def __init__(self, radix: int, digits: int, key: bytes, tweak: bytes, bytes_per_value: int = 16):
+    def __init__(self, radix: int, digits: int, key: bytes, tweak: bytes, 
+                 bytes_per_value: int = 16,
+                 prng: str = 'cbc'):
         self.radix = radix
         self.digits = digits
         self.key = key
@@ -49,11 +52,16 @@ class Riffpe:
                                   AES.block_size,
                                   style='pkcs7')
         self.perm_fun = Perm(self.radix, self.bytes_per_value)
-        # This is a precomputed part, used later as an IV,
-        # which is equivalent to including the whole prefix
-        self.tweak_iv = AES.new(self.key, AES.MODE_CBC, iv=bytes(AES.block_size))\
-                           .encrypt(self.perm_tweak_pfx)[-AES.block_size:]
-        self.prng = CBCTweakablePRNG(self.key, b'', iv=self.tweak_iv)
+        if prng == 'cbc':
+            # This is a precomputed part, used later as an IV,
+            # which is equivalent to including the whole prefix
+            self.tweak_iv = AES.new(self.key, AES.MODE_CBC, iv=bytes(AES.block_size))\
+                               .encrypt(self.perm_tweak_pfx)[-AES.block_size:]
+            self.prng = CBCTweakablePRNG(self.key, b'', iv=self.tweak_iv)
+        elif prng == 'ctr':
+            self.prng = CTRTweakablePRNG(self.key, b'')
+        else:
+            raise NotImplementedError
 
     def perm(self, x: int, tweak: bytes, inverse: bool):
         """
@@ -63,7 +71,10 @@ class Riffpe:
         :param inv: if equal to 0 then the permutation is evaluated if 1 then its inverse
         :return:
         """
-        self.prng.reset(tweak, iv=self.tweak_iv)
+        if isinstance(self.prng, CBCTweakablePRNG):
+            self.prng.reset(tweak, iv=self.tweak_iv)
+        else:
+            self.prng.reset(self.perm_tweak_pfx + tweak)
         return self.perm_fun.perm(self.prng, x, inverse)
 
     def round(self, phase, message, inverse=False):
