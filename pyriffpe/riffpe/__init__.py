@@ -3,6 +3,7 @@
 force_fallback = False
 
 from ._common import TweakablePRNG, int_to_digits, digits_to_int, int_to_bases, find_best_bases
+from .GraFFX import GraFFX
 
 # Try to import native implementation, use fallback (pure Python) otherwise.
 try:
@@ -17,4 +18,5 @@ except ImportError:
     from ._fallback import Riffpe, RiffpeX, CBCTweakablePRNG
 
 __all__ = ('TweakablePRNG', 'int_to_digits', 'digits_to_int', 'int_to_bases', 'find_best_bases',
-           'Riffpe', 'RiffpeX', 'CBCTweakablePRNG')
+           'Riffpe', 'RiffpeX', 'CBCTweakablePRNG',
+           'GraFFX')

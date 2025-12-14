@@ -3,7 +3,7 @@ import random
 import sys
 import time
 
-from typing import List
+from typing import Sequence
 
 import riffpe
 import riffpe._fallback
@@ -94,6 +94,15 @@ bpvs = {
 }
 
 
+def benchmark_graffx(dataset, radix, digits, label, variant):
+    fpe = riffpe.GraFFX(radix, digits, BENCHMARK_KEY, BENCHMARK_TAG, variant)
+
+    descr = f"GraFFX(n={radix}, {variant.upper()})"
+    _benchmark_common(dataset, label, descr,
+                      (lambda entry: riffpe.int_to_digits(entry, digits, radix)),
+                      fpe.encrypt, fpe.decrypt)
+
+
 def benchmark_riffpe(dataset, radix, digits, label, bits: int, native=False):
     if native and not have_native:
         print("--- native benchmark skipped ---")
@@ -171,7 +180,7 @@ def benchmark_go_ff3(dataset, ndigits, label):
                       fpe.Encrypt, fpe.Decrypt)
 
 
-def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: List[int]):
+def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: Sequence[int], ns: Sequence[int]):
     # Python impls
     benchmark_pyffx(dataset, ndigits, label)
     benchmark_ff3(dataset, ndigits, label)
@@ -181,6 +190,9 @@ def all_benchmarks_for_dataset(dataset, label, ndigits, fbb_ths: List[int], ns: 
             if ndigits % log10n != 0:
                 print(f"--- riffpe radix = {radix} skipped (domain not divisible) ---")
             digits = ndigits // log10n
+            if radix in (100,1000,10000):
+                benchmark_graffx(dataset, radix, digits, label, 'ff1')
+                benchmark_graffx(dataset, radix, digits, label, 'ff3')
             benchmark_riffpe(dataset, radix, digits, label, 128, False)
             benchmark_riffpe(dataset, radix, digits, label, 256, False)
         for th in fbb_ths:
